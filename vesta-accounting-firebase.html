@@ -282,6 +282,21 @@
     background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;
   }
   .p-item .tx-amount{color:var(--red);}
+
+  /* monthly history */
+  .month-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:14px 16px;margin-bottom:10px;
+  }
+  .month-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .month-card-head b{font-size:14px;font-weight:800;}
+  .month-card-head span{font-size:11px;color:var(--text-muted);}
+  .month-stats{display:flex;gap:10px;}
+  .month-stat{flex:1;text-align:center;padding:9px 4px;border-radius:11px;background:var(--surface);}
+  .month-stat-label{font-size:10px;color:var(--text-muted);margin-bottom:3px;}
+  .month-stat-value{font-size:13px;font-weight:800;}
+  .month-stat.profit .month-stat-value{color:var(--green);}
+  .month-stat.loss .month-stat-value{color:var(--red);}
 </style>
 </head>
 <body>
@@ -306,6 +321,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" id="tabStore">🏪 حساب فروشگاه</button>
   <button class="tab-btn" id="tabPersonal">💸 خرج‌کرد مغازه</button>
+  <button class="tab-btn" id="tabHistory">📜 تاریخچه ماهانه</button>
 </div>
 
 <main>
@@ -365,11 +381,17 @@
       <input type="number" class="amount" id="pAmount" placeholder="مبلغ (تومان)" inputmode="numeric">
       <input type="text" class="note" id="pNote" placeholder="بابت چی؟">
     </div>
+    <div id="pAmountWords" style="font-size:11.5px;color:var(--text-muted);min-height:14px;"></div>
     <button class="personal-add-btn" id="pAddBtn">ثبت خرج</button>
   </div>
 
   <div class="section-title">تاریخچه خرج‌های مغازه</div>
   <div id="personalList"><div class="empty">هنوز خرجی ثبت نشده</div></div>
+</div>
+
+<div class="panel" id="historyPanel">
+  <div class="section-title">تاریخچه ماهانه</div>
+  <div id="monthHistoryList"><div class="empty">هنوز داده‌ای برای نمایش نیست</div></div>
 </div>
 </main>
 
@@ -378,15 +400,28 @@
 document.getElementById('tabStore').addEventListener('click', ()=>{
   document.getElementById('tabStore').classList.add('active');
   document.getElementById('tabPersonal').classList.remove('active');
+  document.getElementById('tabHistory').classList.remove('active');
   document.getElementById('storePanel').classList.add('active');
   document.getElementById('personalPanel').classList.remove('active');
+  document.getElementById('historyPanel').classList.remove('active');
   document.getElementById('openAdd').style.display = 'flex';
 });
 document.getElementById('tabPersonal').addEventListener('click', ()=>{
   document.getElementById('tabPersonal').classList.add('active');
   document.getElementById('tabStore').classList.remove('active');
+  document.getElementById('tabHistory').classList.remove('active');
   document.getElementById('personalPanel').classList.add('active');
   document.getElementById('storePanel').classList.remove('active');
+  document.getElementById('historyPanel').classList.remove('active');
+  document.getElementById('openAdd').style.display = 'none';
+});
+document.getElementById('tabHistory').addEventListener('click', ()=>{
+  document.getElementById('tabHistory').classList.add('active');
+  document.getElementById('tabStore').classList.remove('active');
+  document.getElementById('tabPersonal').classList.remove('active');
+  document.getElementById('historyPanel').classList.add('active');
+  document.getElementById('storePanel').classList.remove('active');
+  document.getElementById('personalPanel').classList.remove('active');
   document.getElementById('openAdd').style.display = 'none';
 });
 </script>
@@ -408,6 +443,7 @@ document.getElementById('tabPersonal').addEventListener('click', ()=>{
     <div class="field">
       <label>مبلغ (تومان)</label>
       <input type="number" id="fAmount" placeholder="مثلاً ۲۵۰۰۰۰۰" inputmode="numeric">
+      <div id="fAmountWords" style="font-size:11.5px;color:var(--text-muted);margin-top:6px;min-height:14px;"></div>
     </div>
     <div class="field">
       <label>توضیح (اختیاری)</label>
@@ -536,6 +572,51 @@ function dateKey(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d
 function jalaliDayDateKey(jy,jm,jd){
   const g = toGregorian(jy,jm,jd);
   return `${g.gy}-${pad2(g.gm)}-${pad2(g.gd)}`;
+}
+
+/* ================= Persian number to words ================= */
+const P_ONES = ['','یک','دو','سه','چهار','پنج','شش','هفت','هشت','نه'];
+const P_TEENS = ['ده','یازده','دوازده','سیزده','چهارده','پانزده','شانزده','هفده','هجده','نوزده'];
+const P_TENS = ['','ده','بیست','سی','چهل','پنجاه','شصت','هفتاد','هشتاد','نود'];
+const P_HUNDREDS = ['','صد','دویست','سیصد','چهارصد','پانصد','ششصد','هفتصد','هشتصد','نهصد'];
+const P_SCALES = ['','هزار','میلیون','میلیارد','تریلیون'];
+
+function threeDigitToWords(n){
+  const parts = [];
+  const h = Math.floor(n/100), r = n%100;
+  if(h) parts.push(P_HUNDREDS[h]);
+  if(r >= 10 && r <= 19) parts.push(P_TEENS[r-10]);
+  else{
+    const t = Math.floor(r/10), o = r%10;
+    if(t) parts.push(P_TENS[t]);
+    if(o) parts.push(P_ONES[o]);
+  }
+  return parts.join(' و ');
+}
+
+function numberToPersianWords(num){
+  num = Math.round(Math.abs(num));
+  if(num === 0) return 'صفر تومان';
+  const groups = [];
+  let n = num;
+  while(n > 0){ groups.unshift(n % 1000); n = Math.floor(n/1000); }
+  const parts = [];
+  const offset = groups.length - 1;
+  groups.forEach((g, i)=>{
+    if(g === 0) return;
+    const scaleIdx = offset - i;
+    const words = threeDigitToWords(g);
+    parts.push(scaleIdx > 0 ? `${words} ${P_SCALES[scaleIdx]}` : words);
+  });
+  return parts.join(' و ') + ' تومان';
+}
+
+function bindAmountWords(inputId, outId){
+  const input = $(inputId), out = $(outId);
+  input.addEventListener('input', ()=>{
+    const val = Number(input.value);
+    out.textContent = val > 0 ? numberToPersianWords(val) : '';
+  });
 }
 
 /* ================= name gate ================= */
@@ -767,10 +848,47 @@ function renderCalendar(calc){
 }
 
 /* ================= main render ================= */
+function renderMonthHistory(){
+  const list = $('monthHistoryList');
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty">هنوز داده‌ای برای نمایش نیست</div>';
+    return;
+  }
+  const months = {}; // key "jy-jm" -> {jy,jm,income,expense,count}
+  entries.forEach(e=>{
+    const d = new Date(e.date);
+    const j = toJalaali(d.getFullYear(), d.getMonth()+1, d.getDate());
+    const key = `${j.jy}-${j.jm}`;
+    if(!months[key]) months[key] = {jy:j.jy, jm:j.jm, income:0, expense:0, count:0};
+    const amt = Number(e.amount);
+    if(e.type==='income') months[key].income += amt; else months[key].expense += amt;
+    months[key].count += 1;
+  });
+  const sorted = Object.values(months).sort((a,b)=> (b.jy - a.jy) || (b.jm - a.jm));
+  list.innerHTML = sorted.map(m=>{
+    const profit = m.income - m.expense;
+    const hit = profit >= MONTHLY_TARGET;
+    return `
+      <div class="month-card">
+        <div class="month-card-head">
+          <b>${J_MONTHS[m.jm-1]} ${m.jy}</b>
+          <span>${m.count} تراکنش</span>
+        </div>
+        <div class="month-stats">
+          <div class="month-stat"><div class="month-stat-label">درآمد</div><div class="month-stat-value" style="color:var(--green)">${fmt(m.income)}</div></div>
+          <div class="month-stat"><div class="month-stat-label">هزینه</div><div class="month-stat-value" style="color:var(--red)">${fmt(m.expense)}</div></div>
+          <div class="month-stat ${hit?'profit':'loss'}"><div class="month-stat-label">سود خالص</div><div class="month-stat-value">${fmt(profit)}</div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function render(){
   const calc = computeTargets();
   renderTargets(calc);
   renderChart(calc);
+  renderMonthHistory();
 
   // balance
   let balance = 0;
@@ -860,6 +978,7 @@ function openSheet(){
   setType('income');
   $('fAmount').value = '';
   $('fNote').value = '';
+  $('fAmountWords').textContent = '';
   $('btnSave').disabled = false;
 }
 function closeSheet(){ $('overlay').classList.remove('open'); }
@@ -955,6 +1074,7 @@ $('pAddBtn').addEventListener('click', async ()=>{
     });
     $('pAmount').value = '';
     $('pNote').value = '';
+    $('pAmountWords').textContent = '';
     showToast('ثبت شد ✓');
   }catch(e){
     showToast('خطا در ثبت، دوباره تلاش کنید');
@@ -964,6 +1084,8 @@ $('pAddBtn').addEventListener('click', async ()=>{
 
 todayLabel();
 populateCategories();
+bindAmountWords('fAmount','fAmountWords');
+bindAmountWords('pAmount','pAmountWords');
 </script>
 </body>
 </html>
