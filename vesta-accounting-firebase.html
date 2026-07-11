@@ -8,32 +8,33 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
-<meta name="theme-color" content="#241c16">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="حسابدار وستا">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --wood-dark:#211a15;
-    --wood-mid:#3a2c22;
-    --plaster:#f4ede1;
-    --plaster-card:#ffffff;
-    --brass:#c99a44;
-    --brass-bright:#e3b866;
-    --green:#3c7a56;
-    --green-bg:#e7f2ec;
-    --red:#b8433a;
-    --red-bg:#f8e9e7;
-    --text-muted:#8a7f6f;
-    --border:#e6ddcc;
+    --bg:#ffffff;
+    --surface:#f6f7f9;
+    --card:#ffffff;
+    --border:#e7e9ed;
+    --text:#15171b;
+    --text-muted:#868d96;
+    --green:#12d47a;
+    --green-glow:0 0 14px rgba(18,212,122,0.35);
+    --green-bg:#e6fbf1;
+    --red:#ff3b4e;
+    --red-glow:0 0 14px rgba(255,59,78,0.35);
+    --red-bg:#ffe9ec;
+    --gray-bg:#eef0f3;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
     font-family:'Vazirmatn',sans-serif;
-    background:var(--plaster);
-    color:var(--wood-dark);
+    background:var(--bg);
+    color:var(--text);
     padding-bottom:90px;
     min-height:100vh;
   }
@@ -41,77 +42,117 @@
   input,select{font-family:inherit;}
 
   header{
-    background:linear-gradient(160deg,#241c16 0%,#3a2c22 60%,#4a3626 100%);
-    padding:22px 18px 26px;
-    color:#f4ede1;
-    border-radius:0 0 22px 22px;
+    background:var(--bg);
+    padding:18px 18px 10px;
+    border-bottom:1px solid var(--border);
   }
-  .brand{display:flex;align-items:center;gap:9px;margin-bottom:18px;}
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:14px;}
   .brand-mark{
-    width:32px;height:32px;border-radius:8px;
-    background:linear-gradient(135deg,var(--brass-bright),var(--brass));
+    width:32px;height:32px;border-radius:9px;
+    background:var(--text);
     display:flex;align-items:center;justify-content:center;
-    font-weight:900;color:#221a12;font-size:15px;
+    font-weight:900;color:#fff;font-size:14px;
   }
   .brand-name{font-size:16px;font-weight:800;}
-  .brand-sub{font-size:11px;color:#c9bfae;margin-right:auto;}
+  .brand-sub{font-size:11px;color:var(--text-muted);margin-right:auto;}
 
-  .balance-card{text-align:center;padding:8px 0 4px;}
-  .balance-label{font-size:12px;color:#c9bfae;margin-bottom:6px;}
-  .balance-amount{font-size:32px;font-weight:900;color:var(--brass-bright);}
-  .balance-unit{font-size:13px;color:#c9bfae;margin-right:4px;}
+  .sync-note{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .dot.off{background:var(--red);}
+  .dot.pending{background:#e3b866;}
 
-  .mini-stats{display:flex;gap:10px;margin-top:20px;}
-  .mini-stat{
-    flex:1;background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.14);
-    border-radius:12px;padding:10px 12px;
-  }
-  .mini-stat-label{font-size:11px;color:#c9bfae;margin-bottom:4px;}
-  .mini-stat-value{font-size:15px;font-weight:800;}
-  .mini-stat.income .mini-stat-value{color:#7fd6a8;}
-  .mini-stat.expense .mini-stat-value{color:#e79a92;}
-
-  main{padding:18px;max-width:520px;margin:0 auto;}
+  main{padding:16px;max-width:520px;margin:0 auto;}
 
   .section-title{
     font-size:13px;font-weight:700;color:var(--text-muted);
     margin:22px 0 10px;padding-right:2px;
+    display:flex;align-items:center;justify-content:space-between;
   }
   .section-title:first-child{margin-top:0;}
+  .section-title button{font-size:11.5px;color:var(--text);font-weight:700;padding:5px 10px;border-radius:8px;background:var(--surface);}
 
   .card{
-    background:var(--plaster-card);
+    background:var(--card);
     border:1px solid var(--border);
-    border-radius:14px;
+    border-radius:16px;
     padding:14px;
     margin-bottom:10px;
   }
 
+  /* ---- target cards ---- */
+  .target-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .target-card{
+    border-radius:16px;padding:14px;border:1px solid var(--border);background:var(--card);
+  }
+  .target-card.hit{background:var(--green-bg);border-color:transparent;box-shadow:var(--green-glow);}
+  .target-card.miss{background:var(--red-bg);border-color:transparent;box-shadow:var(--red-glow);}
+  .target-label{font-size:11.5px;color:var(--text-muted);font-weight:700;margin-bottom:6px;}
+  .target-amount{font-size:19px;font-weight:900;}
+  .target-amount.hit{color:var(--green);}
+  .target-amount.miss{color:var(--red);}
+  .target-sub{font-size:10.5px;color:var(--text-muted);margin-top:5px;}
+  .target-bar-track{height:6px;background:var(--gray-bg);border-radius:99px;margin-top:8px;overflow:hidden;}
+  .target-bar-fill{height:100%;border-radius:99px;}
+  .target-bar-fill.hit{background:var(--green);box-shadow:var(--green-glow);}
+  .target-bar-fill.miss{background:var(--red);}
+
+  .balance-row{display:flex;gap:10px;margin-top:10px;}
+  .mini-stat{flex:1;border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;}
+  .mini-stat-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;}
+  .mini-stat-value{font-size:16px;font-weight:800;}
+
+  /* ---- bar chart ---- */
+  .chart-card{padding:16px 12px 10px;}
+  .chart-wrap{display:flex;align-items:flex-end;gap:4px;height:120px;overflow-x:auto;padding-bottom:4px;}
+  .bar-col{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;width:18px;}
+  .bar-fill{width:100%;border-radius:5px 5px 2px 2px;min-height:3px;}
+  .bar-fill.hit{background:var(--green);box-shadow:var(--green-glow);}
+  .bar-fill.miss{background:var(--red);}
+  .bar-fill.neutral{background:var(--gray-bg);}
+  .bar-day{font-size:9px;color:var(--text-muted);margin-top:4px;}
+  .chart-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:10.5px;color:var(--text-muted);}
+  .legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:4px;}
+
+  /* ---- calendar ---- */
+  .cal-card{padding:14px;}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cal-head b{font-size:13.5px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-wd{font-size:10px;color:var(--text-muted);text-align:center;font-weight:700;padding-bottom:4px;}
+  .cal-cell{
+    aspect-ratio:1;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:11.5px;font-weight:700;background:var(--gray-bg);color:var(--text-muted);
+  }
+  .cal-cell.hit{background:var(--green);color:#fff;box-shadow:var(--green-glow);}
+  .cal-cell.miss{background:var(--red);color:#fff;}
+  .cal-cell.today{outline:2px solid var(--text);outline-offset:1.5px;}
+  .cal-cell.empty{background:transparent;}
+
+  /* category totals */
   .cat-row{padding:8px 0;}
   .cat-row + .cat-row{border-top:1px solid var(--border);}
   .cat-name{flex:1;font-size:13.5px;font-weight:600;}
-  .cat-amount{font-size:13px;font-weight:700;color:var(--wood-dark);}
-  .cat-bar-track{height:5px;background:#eee3ce;border-radius:99px;margin-top:5px;overflow:hidden;}
-  .cat-bar-fill{height:100%;border-radius:99px;background:var(--brass);}
+  .cat-amount{font-size:13px;font-weight:700;}
+  .cat-bar-track{height:5px;background:var(--gray-bg);border-radius:99px;margin-top:5px;overflow:hidden;}
+  .cat-bar-fill{height:100%;border-radius:99px;background:var(--text);}
 
   .tx-day-label{font-size:12px;font-weight:700;color:var(--text-muted);margin:16px 0 8px;}
   .tx-item{
     display:flex;align-items:center;gap:10px;
-    padding:11px 12px;background:var(--plaster-card);
-    border:1px solid var(--border);border-radius:12px;margin-bottom:8px;
+    padding:11px 12px;background:var(--card);
+    border:1px solid var(--border);border-radius:14px;margin-bottom:8px;
   }
   .tx-badge{
     width:34px;height:34px;border-radius:10px;
     display:flex;align-items:center;justify-content:center;
     font-size:16px;flex-shrink:0;
   }
-  .tx-badge.income{background:var(--green-bg);}
-  .tx-badge.expense{background:var(--red-bg);}
+  .tx-badge.income{background:var(--green-bg);color:var(--green);}
+  .tx-badge.expense{background:var(--red-bg);color:var(--red);}
   .tx-info{flex:1;min-width:0;}
   .tx-cat{font-size:13.5px;font-weight:700;}
   .tx-note{font-size:11.5px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .tx-who{font-size:10.5px;color:var(--brass);margin-top:2px;}
+  .tx-who{font-size:10.5px;color:var(--text-muted);margin-top:2px;}
   .tx-amount{font-size:13.5px;font-weight:800;white-space:nowrap;}
   .tx-amount.income{color:var(--green);}
   .tx-amount.expense{color:var(--red);}
@@ -122,63 +163,69 @@
 
   .fab{
     position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
-    display:flex;gap:10px;background:var(--wood-dark);color:#fff;
+    display:flex;gap:10px;background:var(--text);color:#fff;
     padding:12px 20px;border-radius:999px;font-weight:700;font-size:14px;
-    box-shadow:0 8px 24px rgba(33,26,21,0.35);
+    box-shadow:0 10px 26px rgba(0,0,0,0.22);
     align-items:center;z-index:50;
   }
   .fab span.plus{
-    background:var(--brass-bright);color:#221a12;
+    background:var(--green);color:#fff;
     width:22px;height:22px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;
+    box-shadow:var(--green-glow);
   }
 
   .overlay{
-    position:fixed;inset:0;background:rgba(33,26,21,0.55);
+    position:fixed;inset:0;background:rgba(20,20,22,0.5);
     display:none;align-items:flex-end;z-index:100;
   }
   .overlay.open{display:flex;}
   .sheet{
-    background:var(--plaster);width:100%;border-radius:20px 20px 0 0;
+    background:var(--bg);width:100%;border-radius:22px 22px 0 0;
     padding:20px 18px 26px;max-height:88vh;overflow-y:auto;
     animation:slideUp .2s ease;
   }
   @keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-  .sheet-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+  .sheet-title{font-size:16px;font-weight:800;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
   .type-toggle{display:flex;gap:8px;margin-bottom:16px;}
   .type-btn{
-    flex:1;padding:11px;border-radius:11px;border:1.5px solid var(--border);
+    flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);
     font-weight:700;font-size:13.5px;background:#fff;color:var(--text-muted);
   }
   .type-btn.active.income{background:var(--green-bg);border-color:var(--green);color:var(--green);}
   .type-btn.active.expense{background:var(--red-bg);border-color:var(--red);color:var(--red);}
   .field{margin-bottom:14px;}
-  .field label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;}
+  .field label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;}
+  .field label .manage-link{color:var(--text);text-decoration:underline;font-weight:700;cursor:pointer;}
   .field input, .field select{
-    width:100%;padding:12px 14px;border-radius:11px;border:1.5px solid var(--border);
-    font-size:14px;background:#fff;color:var(--wood-dark);
+    width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);
+    font-size:14px;background:#fff;color:var(--text);
   }
-  .field input:focus, .field select:focus{outline:none;border-color:var(--brass);}
+  .field input:focus, .field select:focus{outline:none;border-color:var(--text);}
   .sheet-actions{display:flex;gap:10px;margin-top:6px;}
-  .btn{padding:13px;border-radius:11px;font-weight:700;font-size:14px;flex:1;}
-  .btn-cancel{background:#fff;border:1.5px solid var(--border);color:var(--text-muted);}
-  .btn-save{background:linear-gradient(135deg,var(--brass-bright),var(--brass));color:#221a12;}
+  .btn{padding:13px;border-radius:12px;font-weight:700;font-size:14px;flex:1;}
+  .btn-cancel{background:var(--surface);color:var(--text-muted);}
+  .btn-save{background:var(--green);color:#fff;box-shadow:var(--green-glow);}
   .btn-save:disabled{opacity:.6;}
+
+  /* products manager */
+  .prod-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .prod-name{flex:1;font-size:13.5px;font-weight:600;}
+  .prod-icon-btn{font-size:15px;padding:6px 8px;color:var(--text-muted);}
+  .prod-icon-btn:hover{color:var(--text);}
+  .prod-add-row{display:flex;gap:8px;margin-top:14px;}
+  .prod-add-row input{flex:1;}
+  .prod-add-row button{background:var(--text);color:#fff;padding:0 16px;border-radius:12px;font-weight:700;font-size:13px;}
 
   .toast{
     position:fixed;top:16px;left:50%;transform:translateX(-50%);
-    background:var(--wood-dark);color:#fff;padding:10px 18px;border-radius:10px;
+    background:var(--text);color:#fff;padding:10px 18px;border-radius:10px;
     font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s ease;
   }
   .toast.show{opacity:1;}
 
-  .sync-note{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);justify-content:center;margin-top:6px;}
-  .dot{width:6px;height:6px;border-radius:50%;background:#7fd6a8;}
-  .dot.off{background:var(--red);}
-  .dot.pending{background:#e3b866;}
-
   .name-gate{
-    position:fixed;inset:0;background:var(--plaster);z-index:300;
+    position:fixed;inset:0;background:var(--bg);z-index:300;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:24px;text-align:center;
   }
@@ -187,13 +234,13 @@
   .name-gate h2{font-size:18px;font-weight:800;margin-bottom:8px;}
   .name-gate p{font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:280px;}
   .name-gate input{
-    width:100%;max-width:280px;padding:13px 16px;border-radius:11px;
+    width:100%;max-width:280px;padding:13px 16px;border-radius:12px;
     border:1.5px solid var(--border);font-size:14px;margin-bottom:12px;text-align:center;
   }
   .name-gate button{
-    width:100%;max-width:280px;padding:13px;border-radius:11px;
-    background:linear-gradient(135deg,var(--brass-bright),var(--brass));
-    color:#221a12;font-weight:700;font-size:14px;
+    width:100%;max-width:280px;padding:13px;border-radius:12px;
+    background:var(--green);color:#fff;font-weight:700;font-size:14px;
+    box-shadow:var(--green-glow);
   }
 </style>
 </head>
@@ -213,25 +260,52 @@
     <div class="brand-name">حسابدار وستا</div>
     <div class="brand-sub" id="todayDate"></div>
   </div>
-  <div class="balance-card">
-    <div class="balance-label">موجودی کل</div>
-    <div class="balance-amount" id="balanceValue">۰</div>
-    <span class="balance-unit">تومان</span>
-  </div>
-  <div class="mini-stats">
-    <div class="mini-stat income">
-      <div class="mini-stat-label">درآمد این ماه</div>
-      <div class="mini-stat-value" id="monthIncome">۰</div>
-    </div>
-    <div class="mini-stat expense">
-      <div class="mini-stat-label">هزینه این ماه</div>
-      <div class="mini-stat-value" id="monthExpense">۰</div>
-    </div>
-  </div>
   <div class="sync-note"><span class="dot pending" id="syncDot"></span><span id="syncText">در حال اتصال...</span></div>
 </header>
 
 <main>
+  <div class="section-title">تارگت‌ها</div>
+  <div class="target-grid">
+    <div class="target-card" id="dailyTargetCard">
+      <div class="target-label">تارگت امروز</div>
+      <div class="target-amount" id="dailyTargetAmount">۰</div>
+      <div class="target-sub" id="dailyTargetSub">—</div>
+      <div class="target-bar-track"><div class="target-bar-fill" id="dailyTargetBar" style="width:0%"></div></div>
+    </div>
+    <div class="target-card" id="monthlyTargetCard">
+      <div class="target-label">تارگت ماهانه</div>
+      <div class="target-amount" id="monthlyTargetAmount">۰</div>
+      <div class="target-sub" id="monthlyTargetSub">—</div>
+      <div class="target-bar-track"><div class="target-bar-fill" id="monthlyTargetBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="balance-row">
+    <div class="mini-stat">
+      <div class="mini-stat-label">موجودی کل</div>
+      <div class="mini-stat-value" id="balanceValue">۰</div>
+    </div>
+    <div class="mini-stat">
+      <div class="mini-stat-label">سود امروز</div>
+      <div class="mini-stat-value" id="todayProfit">۰</div>
+    </div>
+  </div>
+
+  <div class="section-title">نمودار سود ماهانه</div>
+  <div class="card chart-card">
+    <div class="chart-wrap" id="chartWrap"></div>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:var(--green)"></span>تارگت زده شده</span>
+      <span><span class="legend-dot" style="background:var(--red)"></span>تارگت نزده</span>
+    </div>
+  </div>
+
+  <div class="section-title">تقویم تارگت</div>
+  <div class="card cal-card">
+    <div class="cal-head"><b id="calMonthLabel">—</b><span class="target-sub" id="calStreakLabel"></span></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
   <div class="section-title">دسته‌بندی‌های این ماه</div>
   <div class="card" id="catCard"><div class="empty">هنوز تراکنشی ثبت نشده</div></div>
 
@@ -249,7 +323,10 @@
       <button class="type-btn expense" id="btnExpense" type="button">هزینه / خرید</button>
     </div>
     <div class="field">
-      <label>دسته‌بندی</label>
+      <label>
+        <span id="catFieldLabel">جنس فروخته‌شده</span>
+        <span class="manage-link" id="openProductManager">مدیریت اجناس</span>
+      </label>
       <select id="fCategory"></select>
     </div>
     <div class="field">
@@ -267,12 +344,23 @@
   </div>
 </div>
 
+<div class="overlay" id="prodOverlay">
+  <div class="sheet">
+    <div class="sheet-title">مدیریت اجناس <button class="btn-cancel" style="flex:0;padding:6px 12px;border-radius:10px;" id="closeProdManager">بستن</button></div>
+    <div id="prodList"></div>
+    <div class="prod-add-row">
+      <input type="text" id="newProdName" placeholder="نام جنس جدید">
+      <button id="addProdBtn">افزودن</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy
+  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -286,21 +374,91 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const colRef = collection(db, "transactions");
+const txCol = collection(db, "transactions");
+const prodCol = collection(db, "products");
 
-const CATS = {
-  income: ['فروش پنل دیواری فومی','فروش کاغذ دیواری','فروش ترمووال','فروش ورق مرمر','فروش کف‌پوش','فروش قرنیز','فروش لمسه','سایر فروش'],
-  expense: ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه']
-};
+const DEFAULT_PRODUCTS = ['پنل دیواری فومی','کاغذ دیواری','ترمووال','ورق مرمر','کف‌پوش','قرنیز','لمسه','سایر فروش'];
+const EXPENSE_CATS = ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه'];
+
+const DAILY_TARGET = 6500000;
+const MONTHLY_TARGET = 195000000;
 
 let entries = [];
+let products = [];
+let productsSeeded = false;
 let currentType = 'income';
 let userName = localStorage.getItem('vesta-user-name') || '';
 
 const $ = (id) => document.getElementById(id);
-const fmt = (n) => Number(n).toLocaleString('fa-IR');
+const fmt = (n) => Math.round(n).toLocaleString('fa-IR');
+const pad2 = (n) => String(n).padStart(2,'0');
 
-// ---- name gate ----
+/* ================= Jalali calendar conversion (public domain algorithm) ================= */
+function div(a,b){ return ~~(a/b); }
+function mod(a,b){ return a - ~~(a/b)*b; }
+const jBreaks = [-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+function jalCal(jy){
+  var bl=jBreaks.length, gy=jy+621, leapJ=-14, jp=jBreaks[0], jm,jump,leap,leapG,march,n,i;
+  for(i=1;i<bl;i+=1){ jm=jBreaks[i]; jump=jm-jp; if(jy<jm) break; leapJ=leapJ+div(jump,33)*8+div(mod(jump,33),4); jp=jm; }
+  n=jy-jp;
+  leapJ=leapJ+div(n,33)*8+div(mod(n,33)+3,4);
+  if(mod(jump,33)===4 && jump-n===4) leapJ+=1;
+  leapG=div(gy,4)-div((div(gy,100)+1)*3,4)-150;
+  march=20+leapJ-leapG;
+  if(jump-n<6) n=n-jump+div(jump,33)*33;
+  leap=mod(mod(n+1,33)-1,4);
+  if(leap===-1) leap=4;
+  return {leap:leap, gy:gy, march:march};
+}
+function g2d(gy,gm,gd){
+  var d=div((gy+div(gm-8,6)+100100)*1461,4)+div(153*mod(gm+9,12)+2,5)+gd-34840408;
+  d=d-div(div(gy+100100+div(gm-8,6),100)*3,4)+752;
+  return d;
+}
+function d2g(jdn){
+  var j,i,gd,gm,gy;
+  j=4*jdn+139361631;
+  j=j+div(div(4*jdn+183187720,146097)*3,4)*4-3908;
+  i=div(mod(j,1461),4)*5+308;
+  gd=div(mod(i,153),5)+1;
+  gm=mod(div(i,153),12)+1;
+  gy=div(j,1461)-100100+div(8-gm,6);
+  return {gy:gy,gm:gm,gd:gd};
+}
+function j2d(jy,jm,jd){
+  var r=jalCal(jy);
+  return g2d(r.gy,3,r.march)+(jm-1)*31-div(jm,7)*(jm-7)+jd-1;
+}
+function d2j(jdn){
+  var gy=d2g(jdn).gy, jy=gy-621, r,jdn1f,jd,jm,k;
+  r=jalCal(jy);
+  jdn1f=g2d(gy,3,r.march);
+  k=jdn-jdn1f;
+  if(k>=0){
+    if(k<=185){ jm=1+div(k,31); jd=mod(k,31)+1; return {jy:jy,jm:jm,jd:jd}; }
+    else{ k-=186; }
+  } else { jy-=1; k+=179; if(r.leap===1) k+=1; }
+  jm=7+div(k,30); jd=mod(k,30)+1;
+  return {jy:jy,jm:jm,jd:jd};
+}
+function toJalaali(gy,gm,gd){ return d2j(g2d(gy,gm,gd)); }
+function toGregorian(jy,jm,jd){ return d2g(j2d(jy,jm,jd)); }
+function isLeapJalaaliYear(jy){ return jalCal(jy).leap===0; }
+function jalaaliMonthLength(jy,jm){
+  if(jm<=6) return 31;
+  if(jm<=11) return 30;
+  return isLeapJalaaliYear(jy)?30:29;
+}
+const J_MONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const J_WEEKDAYS = ['ش','ی','د','س','چ','پ','ج'];
+
+function dateKey(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function jalaliDayDateKey(jy,jm,jd){
+  const g = toGregorian(jy,jm,jd);
+  return `${g.gy}-${pad2(g.gm)}-${pad2(g.gd)}`;
+}
+
+/* ================= name gate ================= */
 if(userName){ $('nameGate').classList.add('hidden'); }
 $('userNameSave').addEventListener('click', ()=>{
   const val = $('userNameInput').value.trim();
@@ -311,13 +469,17 @@ $('userNameSave').addEventListener('click', ()=>{
 });
 
 function todayLabel(){
-  $('todayDate').textContent = new Date().toLocaleDateString('fa-IR', {day:'numeric', month:'long'});
+  const now = new Date();
+  const j = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
+  $('todayDate').textContent = `${j.jd} ${J_MONTHS[j.jm-1]} ${j.jy}`;
 }
 
+/* ================= products (اجناس) ================= */
 function populateCategories(){
   const sel = $('fCategory');
   sel.innerHTML = '';
-  CATS[currentType].forEach(c=>{
+  const list = currentType === 'income' ? (products.length ? products.map(p=>p.name) : DEFAULT_PRODUCTS) : EXPENSE_CATS;
+  list.forEach(c=>{
     const o = document.createElement('option');
     o.value = c; o.textContent = c;
     sel.appendChild(o);
@@ -328,13 +490,73 @@ function setType(type){
   currentType = type;
   $('btnIncome').classList.toggle('active', type==='income');
   $('btnExpense').classList.toggle('active', type==='expense');
+  $('catFieldLabel').textContent = type==='income' ? 'جنس فروخته‌شده' : 'دسته‌بندی هزینه';
+  $('openProductManager').style.display = type==='income' ? 'inline' : 'none';
   populateCategories();
 }
 
+async function seedDefaultProductsIfEmpty(){
+  if(productsSeeded) return;
+  productsSeeded = true;
+  for(const name of DEFAULT_PRODUCTS){
+    try{ await addDoc(prodCol, {name, createdAt: Date.now()}); }catch(e){}
+  }
+}
+
+onSnapshot(query(prodCol, orderBy("createdAt","asc")), (snap)=>{
+  products = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  if(snap.empty){ seedDefaultProductsIfEmpty(); }
+  renderProductList();
+  populateCategories();
+});
+
+function renderProductList(){
+  const list = $('prodList');
+  if(products.length===0){ list.innerHTML = '<div class="empty">هنوز جنسی اضافه نشده</div>'; return; }
+  list.innerHTML = products.map(p=>`
+    <div class="prod-row">
+      <div class="prod-name">${p.name}</div>
+      <button class="prod-icon-btn" data-edit="${p.id}" title="ویرایش">✎</button>
+      <button class="prod-icon-btn" data-del="${p.id}" title="حذف">✕</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const p = products.find(x=>x.id===btn.dataset.edit);
+      const newName = prompt('نام جدید جنس:', p.name);
+      if(newName && newName.trim() && newName.trim()!==p.name){
+        try{ await updateDoc(doc(db,"products",p.id), {name:newName.trim()}); showToast('ویرایش شد'); }
+        catch(e){ showToast('خطا در ویرایش'); }
+      }
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('این جنس حذف بشه؟')) return;
+      try{ await deleteDoc(doc(db,"products",btn.dataset.del)); showToast('حذف شد'); }
+      catch(e){ showToast('خطا در حذف'); }
+    });
+  });
+}
+
+$('openProductManager').addEventListener('click', ()=>{ $('prodOverlay').classList.add('open'); });
+$('closeProdManager').addEventListener('click', ()=>{ $('prodOverlay').classList.remove('open'); });
+$('prodOverlay').addEventListener('click', (e)=>{ if(e.target.id==='prodOverlay') $('prodOverlay').classList.remove('open'); });
+$('addProdBtn').addEventListener('click', async ()=>{
+  const val = $('newProdName').value.trim();
+  if(!val) return;
+  try{
+    await addDoc(prodCol, {name: val, createdAt: Date.now()});
+    $('newProdName').value = '';
+    showToast('اضافه شد');
+  }catch(e){ showToast('خطا در افزودن'); }
+});
+
+/* ================= sync indicator ================= */
 function setSync(state){
   const dot = $('syncDot');
   dot.classList.remove('off','pending');
-  if(state==='ok'){ dot.style.background='#7fd6a8'; $('syncText').textContent='متصل و هماهنگ بین همه گوشی‌ها'; }
+  if(state==='ok'){ dot.style.background='var(--green)'; $('syncText').textContent='متصل و هماهنگ بین همه گوشی‌ها'; }
   else if(state==='error'){ dot.classList.add('off'); $('syncText').textContent='خطا در اتصال، اینترنت رو چک کنید'; }
   else { dot.classList.add('pending'); $('syncText').textContent='در حال اتصال...'; }
 }
@@ -351,34 +573,150 @@ function isThisMonth(dateStr){
   return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
 }
 
+/* ================= target + calendar computation ================= */
+function computeTargets(){
+  const now = new Date();
+  const todayJ = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
+  const monthLen = jalaaliMonthLength(todayJ.jy, todayJ.jm);
+
+  // daily net profit map by gregorian date key
+  const dailyProfit = {};
+  entries.forEach(e=>{
+    const d = new Date(e.date);
+    const key = dateKey(d);
+    const amt = Number(e.amount);
+    dailyProfit[key] = (dailyProfit[key]||0) + (e.type==='income' ? amt : -amt);
+  });
+
+  let carry = 0;
+  const targets = {}, achieved = {};
+  for(let day=1; day<=todayJ.jd; day++){
+    const effTarget = DAILY_TARGET + carry;
+    const key = jalaliDayDateKey(todayJ.jy, todayJ.jm, day);
+    const dayProfit = dailyProfit[key] || 0;
+    targets[day] = effTarget;
+    achieved[day] = dayProfit;
+    carry = effTarget - dayProfit; // shortfall carries forward, surplus reduces next day
+  }
+
+  const monthProfitSoFar = Object.values(achieved).reduce((a,b)=>a+b, 0);
+
+  return {todayJ, monthLen, targets, achieved, monthProfitSoFar, dailyProfit};
+}
+
+function renderTargets(calc){
+  const {todayJ, targets, achieved, monthProfitSoFar} = calc;
+  const todayTarget = targets[todayJ.jd] || DAILY_TARGET;
+  const todayAchieved = achieved[todayJ.jd] || 0;
+  const dailyRemaining = todayTarget - todayAchieved;
+  const dailyHit = dailyRemaining <= 0;
+
+  $('dailyTargetAmount').textContent = fmt(todayTarget);
+  $('dailyTargetSub').textContent = dailyHit
+    ? `تارگت زده شد (+${fmt(Math.abs(dailyRemaining))} اضافه)`
+    : `${fmt(dailyRemaining)} تومان تا تارگت مونده`;
+  const dailyPct = Math.min(100, Math.max(0,(todayAchieved/todayTarget)*100));
+  $('dailyTargetBar').style.width = dailyPct + '%';
+  $('dailyTargetBar').className = 'target-bar-fill ' + (dailyHit?'hit':'miss');
+  $('dailyTargetCard').className = 'target-card ' + (dailyHit?'hit':'miss');
+  $('dailyTargetAmount').className = 'target-amount ' + (dailyHit?'hit':'miss');
+
+  const monthlyRemaining = MONTHLY_TARGET - monthProfitSoFar;
+  const monthlyHit = monthlyRemaining <= 0;
+  $('monthlyTargetAmount').textContent = fmt(MONTHLY_TARGET);
+  $('monthlyTargetSub').textContent = monthlyHit
+    ? `تارگت ماه زده شد (+${fmt(Math.abs(monthlyRemaining))} اضافه)`
+    : `${fmt(monthlyRemaining)} تومان تا تارگت ماه مونده`;
+  const monthlyPct = Math.min(100, Math.max(0,(monthProfitSoFar/MONTHLY_TARGET)*100));
+  $('monthlyTargetBar').style.width = monthlyPct + '%';
+  $('monthlyTargetBar').className = 'target-bar-fill ' + (monthlyHit?'hit':'miss');
+  $('monthlyTargetCard').className = 'target-card ' + (monthlyHit?'hit':'miss');
+  $('monthlyTargetAmount').className = 'target-amount ' + (monthlyHit?'hit':'miss');
+
+  $('todayProfit').textContent = fmt(todayAchieved);
+}
+
+function renderChart(calc){
+  const {todayJ, targets, achieved} = calc;
+  const wrap = $('chartWrap');
+  const maxVal = Math.max(DAILY_TARGET*1.3, ...Object.values(achieved).map(v=>Math.abs(v)), 1);
+  let html = '';
+  for(let day=1; day<=todayJ.jd; day++){
+    const val = achieved[day]||0;
+    const hit = val >= (targets[day]||DAILY_TARGET);
+    const heightPct = Math.max(4, Math.min(100, (Math.abs(val)/maxVal)*100));
+    html += `<div class="bar-col">
+      <div class="bar-fill ${val===0?'neutral':(hit?'hit':'miss')}" style="height:${heightPct}px"></div>
+      <div class="bar-day">${day}</div>
+    </div>`;
+  }
+  wrap.innerHTML = html || '<div class="empty">داده‌ای نیست</div>';
+  wrap.scrollLeft = wrap.scrollWidth;
+}
+
+function renderCalendar(calc){
+  const {todayJ, monthLen, targets, achieved} = calc;
+  $('calMonthLabel').textContent = `${J_MONTHS[todayJ.jm-1]} ${todayJ.jy}`;
+
+  let hitCount = 0, missCount = 0;
+  for(let d=1; d<=todayJ.jd; d++){
+    if((achieved[d]||0) >= (targets[d]||DAILY_TARGET)) hitCount++; else missCount++;
+  }
+  $('calStreakLabel').textContent = `${hitCount} روز موفق / ${missCount} روز ناموفق`;
+
+  // first day of month weekday offset (Saturday=0)
+  const firstGregorian = toGregorian(todayJ.jy, todayJ.jm, 1);
+  const firstDate = new Date(firstGregorian.gy, firstGregorian.gm-1, firstGregorian.gd);
+  const offset = (firstDate.getDay()+1) % 7;
+
+  let html = J_WEEKDAYS.map(w=>`<div class="cal-wd">${w}</div>`).join('');
+  for(let i=0;i<offset;i++){ html += `<div class="cal-cell empty"></div>`; }
+  for(let day=1; day<=monthLen; day++){
+    let cls = 'cal-cell';
+    if(day > todayJ.jd){
+      cls += '';
+    } else {
+      const hit = (achieved[day]||0) >= (targets[day]||DAILY_TARGET);
+      cls += hit ? ' hit' : ' miss';
+    }
+    if(day === todayJ.jd) cls += ' today';
+    html += `<div class="${cls}">${day}</div>`;
+  }
+  $('calGrid').innerHTML = html;
+}
+
+/* ================= main render ================= */
 function render(){
-  let balance = 0, monthIncome = 0, monthExpense = 0;
+  const calc = computeTargets();
+  renderTargets(calc);
+  renderChart(calc);
+  renderCalendar(calc);
+
+  // balance
+  let balance = 0;
   const catTotals = {};
   entries.forEach(e=>{
     const amt = Number(e.amount);
     balance += e.type==='income' ? amt : -amt;
     if(isThisMonth(e.date)){
-      if(e.type==='income') monthIncome += amt; else monthExpense += amt;
-      catTotals[e.category] = (catTotals[e.category]||0) + amt;
+      catTotals[e.category] = (catTotals[e.category]||0) + (e.type==='income'?amt:-amt);
     }
   });
   $('balanceValue').textContent = fmt(balance);
-  $('monthIncome').textContent = fmt(monthIncome);
-  $('monthExpense').textContent = fmt(monthExpense);
 
   const catCard = $('catCard');
-  const sorted = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+  const sorted = Object.entries(catTotals).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
   if(sorted.length===0){
     catCard.innerHTML = '<div class="empty">هنوز تراکنشی ثبت نشده</div>';
   } else {
-    const max = sorted[0][1];
+    const max = Math.max(...sorted.map(s=>Math.abs(s[1])));
     catCard.innerHTML = sorted.map(([name, amt])=>`
       <div class="cat-row">
         <div style="display:flex;justify-content:space-between;">
           <div class="cat-name">${name}</div>
-          <div class="cat-amount">${fmt(amt)}</div>
+          <div class="cat-amount" style="color:${amt>=0?'var(--green)':'var(--red)'}">${amt>=0?'+':''}${fmt(amt)}</div>
         </div>
-        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.round(amt/max*100)}%"></div></div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.round(Math.abs(amt)/max*100)}%;background:${amt>=0?'var(--green)':'var(--red)'}"></div></div>
       </div>
     `).join('');
   }
@@ -391,7 +729,9 @@ function render(){
   const sortedTx = [...entries].sort((a,b)=> new Date(b.date) - new Date(a.date));
   const groups = {};
   sortedTx.forEach(e=>{
-    const label = new Date(e.date).toLocaleDateString('fa-IR', {day:'numeric', month:'long', year:'numeric'});
+    const d = new Date(e.date);
+    const j = toJalaali(d.getFullYear(), d.getMonth()+1, d.getDate());
+    const label = `${j.jd} ${J_MONTHS[j.jm-1]} ${j.jy}`;
     if(!groups[label]) groups[label] = [];
     groups[label].push(e);
   });
@@ -421,8 +761,7 @@ function render(){
   });
 }
 
-// live sync
-onSnapshot(query(colRef, orderBy("date","desc")),
+onSnapshot(query(txCol, orderBy("date","desc")),
   (snapshot)=>{
     entries = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
     setSync('ok');
@@ -451,7 +790,7 @@ $('btnSave').addEventListener('click', async ()=>{
   const btn = $('btnSave');
   btn.disabled = true;
   try{
-    await addDoc(colRef, {
+    await addDoc(txCol, {
       type: currentType,
       category: $('fCategory').value,
       amount: amount,
