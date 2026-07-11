@@ -117,11 +117,11 @@
   .cal-card{padding:14px;}
   .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
   .cal-head b{font-size:13.5px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
-  .cal-wd{font-size:10px;color:var(--text-muted);text-align:center;font-weight:700;padding-bottom:4px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:290px;margin:0 auto;}
+  .cal-wd{font-size:9.5px;color:var(--text-muted);text-align:center;font-weight:700;padding-bottom:3px;}
   .cal-cell{
-    aspect-ratio:1;border-radius:9px;display:flex;align-items:center;justify-content:center;
-    font-size:11.5px;font-weight:700;background:var(--gray-bg);color:var(--text-muted);
+    aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:700;background:var(--gray-bg);color:var(--text-muted);
   }
   .cal-cell.hit{background:var(--green);color:#fff;box-shadow:var(--green-glow);}
   .cal-cell.miss{background:var(--red);color:#fff;}
@@ -242,6 +242,39 @@
     background:var(--green);color:#fff;font-weight:700;font-size:14px;
     box-shadow:var(--green-glow);
   }
+
+  /* tab bar */
+  .tab-bar{display:flex;gap:8px;padding:0 16px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto;}
+  .tab-btn{
+    flex:1;padding:11px;border-radius:12px;font-weight:700;font-size:13px;
+    background:var(--surface);color:var(--text-muted);
+  }
+  .tab-btn.active{background:var(--text);color:#fff;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* personal expenses */
+  .personal-total-card{
+    text-align:center;padding:22px 14px;border-radius:18px;
+    background:var(--red-bg);box-shadow:var(--red-glow);margin-bottom:14px;
+  }
+  .personal-total-label{font-size:12px;color:var(--text-muted);font-weight:700;margin-bottom:6px;}
+  .personal-total-amount{font-size:28px;font-weight:900;color:var(--red);}
+  .personal-add-card{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+  .personal-add-row{display:flex;gap:8px;}
+  .personal-add-row input{
+    padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);font-size:14px;
+  }
+  .personal-add-row input.amount{flex:1;}
+  .personal-add-row input.note{flex:1.4;}
+  .personal-add-btn{
+    background:var(--red);color:#fff;padding:12px;border-radius:12px;font-weight:700;font-size:14px;
+  }
+  .p-item{
+    display:flex;align-items:center;gap:10px;padding:11px 12px;
+    background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;
+  }
+  .p-item .tx-amount{color:var(--red);}
 </style>
 </head>
 <body>
@@ -263,7 +296,13 @@
   <div class="sync-note"><span class="dot pending" id="syncDot"></span><span id="syncText">در حال اتصال...</span></div>
 </header>
 
+<div class="tab-bar">
+  <button class="tab-btn active" id="tabStore">🏪 حساب فروشگاه</button>
+  <button class="tab-btn" id="tabPersonal">👤 خرج شخصی من</button>
+</div>
+
 <main>
+<div class="panel active" id="storePanel">
   <div class="section-title">تارگت‌ها</div>
   <div class="target-grid">
     <div class="target-card" id="dailyTargetCard">
@@ -311,9 +350,45 @@
 
   <div class="section-title">تراکنش‌های اخیر</div>
   <div id="txList"><div class="empty">در حال بارگذاری...</div></div>
+</div>
+
+<div class="panel" id="personalPanel">
+  <div class="personal-total-card">
+    <div class="personal-total-label">مجموع کل خرج‌کرد شخصی</div>
+    <div class="personal-total-amount" id="personalTotal">۰ تومان</div>
+  </div>
+
+  <div class="section-title">ثبت خرج جدید</div>
+  <div class="card personal-add-card">
+    <div class="personal-add-row">
+      <input type="number" class="amount" id="pAmount" placeholder="مبلغ (تومان)" inputmode="numeric">
+      <input type="text" class="note" id="pNote" placeholder="بابت چی؟">
+    </div>
+    <button class="personal-add-btn" id="pAddBtn">ثبت خرج</button>
+  </div>
+
+  <div class="section-title">تاریخچه خرج‌ها</div>
+  <div id="personalList"><div class="empty">هنوز خرجی ثبت نشده</div></div>
+</div>
 </main>
 
 <button class="fab" id="openAdd"><span class="plus">+</span> ثبت تراکنش</button>
+<script>
+document.getElementById('tabStore').addEventListener('click', ()=>{
+  document.getElementById('tabStore').classList.add('active');
+  document.getElementById('tabPersonal').classList.remove('active');
+  document.getElementById('storePanel').classList.add('active');
+  document.getElementById('personalPanel').classList.remove('active');
+  document.getElementById('openAdd').style.display = 'flex';
+});
+document.getElementById('tabPersonal').addEventListener('click', ()=>{
+  document.getElementById('tabPersonal').classList.add('active');
+  document.getElementById('tabStore').classList.remove('active');
+  document.getElementById('personalPanel').classList.add('active');
+  document.getElementById('storePanel').classList.remove('active');
+  document.getElementById('openAdd').style.display = 'none';
+});
+</script>
 
 <div class="overlay" id="overlay">
   <div class="sheet">
@@ -376,6 +451,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const txCol = collection(db, "transactions");
 const prodCol = collection(db, "products");
+const personalCol = collection(db, "personalExpenses");
 
 const DEFAULT_PRODUCTS = ['پنل دیواری فومی','کاغذ دیواری','ترمووال','ورق مرمر','کف‌پوش','قرنیز','لمسه','سایر فروش'];
 const EXPENSE_CATS = ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه'];
@@ -799,6 +875,75 @@ $('btnSave').addEventListener('click', async ()=>{
       date: new Date().toISOString()
     });
     closeSheet();
+    showToast('ثبت شد ✓');
+  }catch(e){
+    showToast('خطا در ثبت، دوباره تلاش کنید');
+  }
+  btn.disabled = false;
+});
+
+/* ================= personal expenses ================= */
+let personalEntries = [];
+
+onSnapshot(query(personalCol, orderBy("date","desc")),
+  (snapshot)=>{
+    personalEntries = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
+    renderPersonal();
+  },
+  (err)=>{ /* silent, main sync indicator covers connection state */ }
+);
+
+function renderPersonal(){
+  const total = personalEntries.reduce((sum,e)=>sum + Number(e.amount), 0);
+  $('personalTotal').textContent = fmt(total) + ' تومان';
+
+  const list = $('personalList');
+  if(personalEntries.length===0){
+    list.innerHTML = '<div class="empty">هنوز خرجی ثبت نشده</div>';
+    return;
+  }
+  const sorted = [...personalEntries].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  list.innerHTML = sorted.map(e=>{
+    const d = new Date(e.date);
+    const j = toJalaali(d.getFullYear(), d.getMonth()+1, d.getDate());
+    const label = `${j.jd} ${J_MONTHS[j.jm-1]}`;
+    return `
+      <div class="p-item">
+        <div class="tx-badge expense">↓</div>
+        <div class="tx-info">
+          <div class="tx-cat">${e.note || 'بدون توضیح'}</div>
+          <div class="tx-note">${label}${e.byUser ? ' • ' + e.byUser : ''}</div>
+        </div>
+        <div class="tx-amount">- ${fmt(e.amount)}</div>
+        <button class="tx-del" data-pid="${e.id}" title="حذف">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('[data-pid]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      try{
+        await deleteDoc(doc(db, "personalExpenses", btn.dataset.pid));
+        showToast('حذف شد');
+      }catch(e){ showToast('خطا در حذف'); }
+    });
+  });
+}
+
+$('pAddBtn').addEventListener('click', async ()=>{
+  const amount = Number($('pAmount').value);
+  if(!amount || amount <= 0){ showToast('مبلغ رو درست وارد کنید'); return; }
+  const btn = $('pAddBtn');
+  btn.disabled = true;
+  try{
+    await addDoc(personalCol, {
+      amount: amount,
+      note: $('pNote').value.trim(),
+      byUser: userName || 'ناشناس',
+      date: new Date().toISOString()
+    });
+    $('pAmount').value = '';
+    $('pNote').value = '';
     showToast('ثبت شد ✓');
   }catch(e){
     showToast('خطا در ثبت، دوباره تلاش کنید');
