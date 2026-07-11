@@ -355,7 +355,7 @@
 
 <div class="panel" id="personalPanel">
   <div class="personal-total-card">
-    <div class="personal-total-label">مجموع کل خرج‌کرد شخصی</div>
+    <div class="personal-total-label">مجموع کل خرج‌کرد مغازه</div>
     <div class="personal-total-amount" id="personalTotal">۰ تومان</div>
   </div>
 
@@ -368,7 +368,7 @@
     <button class="personal-add-btn" id="pAddBtn">ثبت خرج</button>
   </div>
 
-  <div class="section-title">تاریخچه خرج‌ها</div>
+  <div class="section-title">تاریخچه خرج‌های مغازه</div>
   <div id="personalList"><div class="empty">هنوز خرجی ثبت نشده</div></div>
 </div>
 </main>
@@ -829,6 +829,7 @@ function render(){
 
   txList.querySelectorAll('.tx-del').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
+      if(!confirm('این تراکنش حذف بشه؟')) return;
       try{
         await deleteDoc(doc(db, "transactions", btn.dataset.id));
         showToast('تراکنش حذف شد');
@@ -851,6 +852,7 @@ function openSheet(){
   setType('income');
   $('fAmount').value = '';
   $('fNote').value = '';
+  $('btnSave').disabled = false;
 }
 function closeSheet(){ $('overlay').classList.remove('open'); }
 
@@ -878,8 +880,9 @@ $('btnSave').addEventListener('click', async ()=>{
     showToast('ثبت شد ✓');
   }catch(e){
     showToast('خطا در ثبت، دوباره تلاش کنید');
+  }finally{
+    btn.disabled = false;
   }
-  btn.disabled = false;
 });
 
 /* ================= personal expenses ================= */
