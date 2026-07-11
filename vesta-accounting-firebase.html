@@ -201,6 +201,13 @@
     width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);
     font-size:14px;background:#fff;color:var(--text);
   }
+  .field select{
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23868d96' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:left 14px center;
+    padding-left:34px;
+  }
   .field input:focus, .field select:focus{outline:none;border-color:var(--text);}
   .sheet-actions{display:flex;gap:10px;margin-top:6px;}
   .btn{padding:13px;border-radius:12px;font-weight:700;font-size:14px;flex:1;}
@@ -298,7 +305,7 @@
 
 <div class="tab-bar">
   <button class="tab-btn active" id="tabStore">🏪 حساب فروشگاه</button>
-  <button class="tab-btn" id="tabPersonal">👤 خرج شخصی من</button>
+  <button class="tab-btn" id="tabPersonal">💸 خرج‌کرد مغازه</button>
 </div>
 
 <main>
@@ -337,12 +344,6 @@
       <span><span class="legend-dot" style="background:var(--green)"></span>تارگت زده شده</span>
       <span><span class="legend-dot" style="background:var(--red)"></span>تارگت نزده</span>
     </div>
-  </div>
-
-  <div class="section-title">تقویم تارگت</div>
-  <div class="card cal-card">
-    <div class="cal-head"><b id="calMonthLabel">—</b><span class="target-sub" id="calStreakLabel"></span></div>
-    <div class="cal-grid" id="calGrid"></div>
   </div>
 
   <div class="section-title">دسته‌بندی‌های این ماه</div>
@@ -766,7 +767,6 @@ function render(){
   const calc = computeTargets();
   renderTargets(calc);
   renderChart(calc);
-  renderCalendar(calc);
 
   // balance
   let balance = 0;
