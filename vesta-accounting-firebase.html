@@ -436,7 +436,7 @@ document.getElementById('tabPersonal').addEventListener('click', ()=>{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy
+  getFirestore, enableIndexedDbPersistence, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -450,6 +450,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+enableIndexedDbPersistence(db).catch((err)=>{
+  console.warn('Offline persistence not enabled:', err.code);
+});
 const txCol = collection(db, "transactions");
 const prodCol = collection(db, "products");
 const personalCol = collection(db, "personalExpenses");
@@ -635,6 +638,7 @@ function setSync(state){
   dot.classList.remove('off','pending');
   if(state==='ok'){ dot.style.background='var(--green)'; $('syncText').textContent='متصل و هماهنگ بین همه گوشی‌ها'; }
   else if(state==='error'){ dot.classList.add('off'); $('syncText').textContent='خطا در اتصال، اینترنت رو چک کنید'; }
+  else if(state==='pending'){ dot.classList.add('pending'); $('syncText').textContent='آفلاین — ذخیره شد، به‌محض وصل شدن اینترنت ارسال میشه'; }
   else { dot.classList.add('pending'); $('syncText').textContent='در حال اتصال...'; }
 }
 
@@ -841,7 +845,11 @@ function render(){
 onSnapshot(query(txCol, orderBy("date","desc")),
   (snapshot)=>{
     entries = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
-    setSync('ok');
+    if(snapshot.metadata.hasPendingWrites || snapshot.metadata.fromCache){
+      setSync('pending');
+    } else {
+      setSync('ok');
+    }
     render();
   },
   (err)=>{ setSync('error'); }
