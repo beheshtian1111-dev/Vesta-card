@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حسابدار وستا</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<meta name="theme-color" content="#241c16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="حسابدار وستا">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-dark:#211a15;
+    --wood-mid:#3a2c22;
+    --plaster:#f4ede1;
+    --plaster-card:#ffffff;
+    --brass:#c99a44;
+    --brass-bright:#e3b866;
+    --green:#3c7a56;
+    --green-bg:#e7f2ec;
+    --red:#b8433a;
+    --red-bg:#f8e9e7;
+    --text-muted:#8a7f6f;
+    --border:#e6ddcc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Vazirmatn',sans-serif;
+    background:var(--plaster);
+    color:var(--wood-dark);
+    padding-bottom:90px;
+    min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input,select{font-family:inherit;}
+
+  header{
+    background:linear-gradient(160deg,#241c16 0%,#3a2c22 60%,#4a3626 100%);
+    padding:22px 18px 26px;
+    color:#f4ede1;
+    border-radius:0 0 22px 22px;
+  }
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:18px;}
+  .brand-mark{
+    width:32px;height:32px;border-radius:8px;
+    background:linear-gradient(135deg,var(--brass-bright),var(--brass));
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;color:#221a12;font-size:15px;
+  }
+  .brand-name{font-size:16px;font-weight:800;}
+  .brand-sub{font-size:11px;color:#c9bfae;margin-right:auto;}
+
+  .balance-card{text-align:center;padding:8px 0 4px;}
+  .balance-label{font-size:12px;color:#c9bfae;margin-bottom:6px;}
+  .balance-amount{font-size:32px;font-weight:900;color:var(--brass-bright);}
+  .balance-unit{font-size:13px;color:#c9bfae;margin-right:4px;}
+
+  .mini-stats{display:flex;gap:10px;margin-top:20px;}
+  .mini-stat{
+    flex:1;background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:12px;padding:10px 12px;
+  }
+  .mini-stat-label{font-size:11px;color:#c9bfae;margin-bottom:4px;}
+  .mini-stat-value{font-size:15px;font-weight:800;}
+  .mini-stat.income .mini-stat-value{color:#7fd6a8;}
+  .mini-stat.expense .mini-stat-value{color:#e79a92;}
+
+  main{padding:18px;max-width:520px;margin:0 auto;}
+
+  .section-title{
+    font-size:13px;font-weight:700;color:var(--text-muted);
+    margin:22px 0 10px;padding-right:2px;
+  }
+  .section-title:first-child{margin-top:0;}
+
+  .card{
+    background:var(--plaster-card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:10px;
+  }
+
+  .cat-row{padding:8px 0;}
+  .cat-row + .cat-row{border-top:1px solid var(--border);}
+  .cat-name{flex:1;font-size:13.5px;font-weight:600;}
+  .cat-amount{font-size:13px;font-weight:700;color:var(--wood-dark);}
+  .cat-bar-track{height:5px;background:#eee3ce;border-radius:99px;margin-top:5px;overflow:hidden;}
+  .cat-bar-fill{height:100%;border-radius:99px;background:var(--brass);}
+
+  .tx-day-label{font-size:12px;font-weight:700;color:var(--text-muted);margin:16px 0 8px;}
+  .tx-item{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;background:var(--plaster-card);
+    border:1px solid var(--border);border-radius:12px;margin-bottom:8px;
+  }
+  .tx-badge{
+    width:34px;height:34px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;flex-shrink:0;
+  }
+  .tx-badge.income{background:var(--green-bg);}
+  .tx-badge.expense{background:var(--red-bg);}
+  .tx-info{flex:1;min-width:0;}
+  .tx-cat{font-size:13.5px;font-weight:700;}
+  .tx-note{font-size:11.5px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tx-who{font-size:10.5px;color:var(--brass);margin-top:2px;}
+  .tx-amount{font-size:13.5px;font-weight:800;white-space:nowrap;}
+  .tx-amount.income{color:var(--green);}
+  .tx-amount.expense{color:var(--red);}
+  .tx-del{color:var(--text-muted);font-size:16px;padding:4px 6px;flex-shrink:0;}
+  .tx-del:hover{color:var(--red);}
+
+  .empty{text-align:center;color:var(--text-muted);font-size:13px;padding:28px 10px;}
+
+  .fab{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    display:flex;gap:10px;background:var(--wood-dark);color:#fff;
+    padding:12px 20px;border-radius:999px;font-weight:700;font-size:14px;
+    box-shadow:0 8px 24px rgba(33,26,21,0.35);
+    align-items:center;z-index:50;
+  }
+  .fab span.plus{
+    background:var(--brass-bright);color:#221a12;
+    width:22px;height:22px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;
+  }
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(33,26,21,0.55);
+    display:none;align-items:flex-end;z-index:100;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--plaster);width:100%;border-radius:20px 20px 0 0;
+    padding:20px 18px 26px;max-height:88vh;overflow-y:auto;
+    animation:slideUp .2s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+  .type-toggle{display:flex;gap:8px;margin-bottom:16px;}
+  .type-btn{
+    flex:1;padding:11px;border-radius:11px;border:1.5px solid var(--border);
+    font-weight:700;font-size:13.5px;background:#fff;color:var(--text-muted);
+  }
+  .type-btn.active.income{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .type-btn.active.expense{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;padding:12px 14px;border-radius:11px;border:1.5px solid var(--border);
+    font-size:14px;background:#fff;color:var(--wood-dark);
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--brass);}
+  .sheet-actions{display:flex;gap:10px;margin-top:6px;}
+  .btn{padding:13px;border-radius:11px;font-weight:700;font-size:14px;flex:1;}
+  .btn-cancel{background:#fff;border:1.5px solid var(--border);color:var(--text-muted);}
+  .btn-save{background:linear-gradient(135deg,var(--brass-bright),var(--brass));color:#221a12;}
+  .btn-save:disabled{opacity:.6;}
+
+  .toast{
+    position:fixed;top:16px;left:50%;transform:translateX(-50%);
+    background:var(--wood-dark);color:#fff;padding:10px 18px;border-radius:10px;
+    font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .toast.show{opacity:1;}
+
+  .sync-note{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);justify-content:center;margin-top:6px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:#7fd6a8;}
+  .dot.off{background:var(--red);}
+  .dot.pending{background:#e3b866;}
+
+  .name-gate{
+    position:fixed;inset:0;background:var(--plaster);z-index:300;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;text-align:center;
+  }
+  .name-gate.hidden{display:none;}
+  .name-gate .brand-mark{width:48px;height:48px;font-size:20px;margin-bottom:16px;}
+  .name-gate h2{font-size:18px;font-weight:800;margin-bottom:8px;}
+  .name-gate p{font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:280px;}
+  .name-gate input{
+    width:100%;max-width:280px;padding:13px 16px;border-radius:11px;
+    border:1.5px solid var(--border);font-size:14px;margin-bottom:12px;text-align:center;
+  }
+  .name-gate button{
+    width:100%;max-width:280px;padding:13px;border-radius:11px;
+    background:linear-gradient(135deg,var(--brass-bright),var(--brass));
+    color:#221a12;font-weight:700;font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="name-gate" id="nameGate">
+  <div class="brand-mark">VS</div>
+  <h2>حسابدار وستا</h2>
+  <p>اسمت رو وارد کن تا معلوم باشه هر تراکنش رو کی ثبت کرده</p>
+  <input type="text" id="userNameInput" placeholder="مثلاً محمد">
+  <button id="userNameSave">ورود</button>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">VS</div>
+    <div class="brand-name">حسابدار وستا</div>
+    <div class="brand-sub" id="todayDate"></div>
+  </div>
+  <div class="balance-card">
+    <div class="balance-label">موجودی کل</div>
+    <div class="balance-amount" id="balanceValue">۰</div>
+    <span class="balance-unit">تومان</span>
+  </div>
+  <div class="mini-stats">
+    <div class="mini-stat income">
+      <div class="mini-stat-label">درآمد این ماه</div>
+      <div class="mini-stat-value" id="monthIncome">۰</div>
+    </div>
+    <div class="mini-stat expense">
+      <div class="mini-stat-label">هزینه این ماه</div>
+      <div class="mini-stat-value" id="monthExpense">۰</div>
+    </div>
+  </div>
+  <div class="sync-note"><span class="dot pending" id="syncDot"></span><span id="syncText">در حال اتصال...</span></div>
+</header>
+
+<main>
+  <div class="section-title">دسته‌بندی‌های این ماه</div>
+  <div class="card" id="catCard"><div class="empty">هنوز تراکنشی ثبت نشده</div></div>
+
+  <div class="section-title">تراکنش‌های اخیر</div>
+  <div id="txList"><div class="empty">در حال بارگذاری...</div></div>
+</main>
+
+<button class="fab" id="openAdd"><span class="plus">+</span> ثبت تراکنش</button>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-title">تراکنش جدید</div>
+    <div class="type-toggle">
+      <button class="type-btn income active" id="btnIncome" type="button">فروش / درآمد</button>
+      <button class="type-btn expense" id="btnExpense" type="button">هزینه / خرید</button>
+    </div>
+    <div class="field">
+      <label>دسته‌بندی</label>
+      <select id="fCategory"></select>
+    </div>
+    <div class="field">
+      <label>مبلغ (تومان)</label>
+      <input type="number" id="fAmount" placeholder="مثلاً ۲۵۰۰۰۰۰" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>توضیح (اختیاری)</label>
+      <input type="text" id="fNote" placeholder="مثلاً نام مشتری یا توضیح کوتاه">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-cancel" id="btnCancel">انصراف</button>
+      <button class="btn btn-save" id="btnSave">ثبت تراکنش</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBi8mEf2gsjrJTMVOXP5-azHOK2COa6ieE",
+  authDomain: "vesta-decor-shop.firebaseapp.com",
+  projectId: "vesta-decor-shop",
+  storageBucket: "vesta-decor-shop.firebasestorage.app",
+  messagingSenderId: "674565220612",
+  appId: "1:674565220612:web:5df676e754c568a8880851"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const colRef = collection(db, "transactions");
+
+const CATS = {
+  income: ['فروش پنل دیواری فومی','فروش کاغذ دیواری','فروش ترمووال','فروش ورق مرمر','فروش کف‌پوش','فروش قرنیز','فروش لمسه','سایر فروش'],
+  expense: ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه']
+};
+
+let entries = [];
+let currentType = 'income';
+let userName = localStorage.getItem('vesta-user-name') || '';
+
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n).toLocaleString('fa-IR');
+
+// ---- name gate ----
+if(userName){ $('nameGate').classList.add('hidden'); }
+$('userNameSave').addEventListener('click', ()=>{
+  const val = $('userNameInput').value.trim();
+  if(!val) return;
+  userName = val;
+  localStorage.setItem('vesta-user-name', val);
+  $('nameGate').classList.add('hidden');
+});
+
+function todayLabel(){
+  $('todayDate').textContent = new Date().toLocaleDateString('fa-IR', {day:'numeric', month:'long'});
+}
+
+function populateCategories(){
+  const sel = $('fCategory');
+  sel.innerHTML = '';
+  CATS[currentType].forEach(c=>{
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+function setType(type){
+  currentType = type;
+  $('btnIncome').classList.toggle('active', type==='income');
+  $('btnExpense').classList.toggle('active', type==='expense');
+  populateCategories();
+}
+
+function setSync(state){
+  const dot = $('syncDot');
+  dot.classList.remove('off','pending');
+  if(state==='ok'){ dot.style.background='#7fd6a8'; $('syncText').textContent='متصل و هماهنگ بین همه گوشی‌ها'; }
+  else if(state==='error'){ dot.classList.add('off'); $('syncText').textContent='خطا در اتصال، اینترنت رو چک کنید'; }
+  else { dot.classList.add('pending'); $('syncText').textContent='در حال اتصال...'; }
+}
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function isThisMonth(dateStr){
+  const d = new Date(dateStr), now = new Date();
+  return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+}
+
+function render(){
+  let balance = 0, monthIncome = 0, monthExpense = 0;
+  const catTotals = {};
+  entries.forEach(e=>{
+    const amt = Number(e.amount);
+    balance += e.type==='income' ? amt : -amt;
+    if(isThisMonth(e.date)){
+      if(e.type==='income') monthIncome += amt; else monthExpense += amt;
+      catTotals[e.category] = (catTotals[e.category]||0) + amt;
+    }
+  });
+  $('balanceValue').textContent = fmt(balance);
+  $('monthIncome').textContent = fmt(monthIncome);
+  $('monthExpense').textContent = fmt(monthExpense);
+
+  const catCard = $('catCard');
+  const sorted = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+  if(sorted.length===0){
+    catCard.innerHTML = '<div class="empty">هنوز تراکنشی ثبت نشده</div>';
+  } else {
+    const max = sorted[0][1];
+    catCard.innerHTML = sorted.map(([name, amt])=>`
+      <div class="cat-row">
+        <div style="display:flex;justify-content:space-between;">
+          <div class="cat-name">${name}</div>
+          <div class="cat-amount">${fmt(amt)}</div>
+        </div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.round(amt/max*100)}%"></div></div>
+      </div>
+    `).join('');
+  }
+
+  const txList = $('txList');
+  if(entries.length===0){
+    txList.innerHTML = '<div class="empty">برای شروع، تراکنش اول رو ثبت کنید</div>';
+    return;
+  }
+  const sortedTx = [...entries].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const groups = {};
+  sortedTx.forEach(e=>{
+    const label = new Date(e.date).toLocaleDateString('fa-IR', {day:'numeric', month:'long', year:'numeric'});
+    if(!groups[label]) groups[label] = [];
+    groups[label].push(e);
+  });
+  txList.innerHTML = Object.entries(groups).map(([label, items])=>`
+    <div class="tx-day-label">${label}</div>
+    ${items.map(e=>`
+      <div class="tx-item">
+        <div class="tx-badge ${e.type}">${e.type==='income' ? '↑' : '↓'}</div>
+        <div class="tx-info">
+          <div class="tx-cat">${e.category}</div>
+          ${e.note ? `<div class="tx-note">${e.note}</div>` : ''}
+          ${e.byUser ? `<div class="tx-who">ثبت توسط ${e.byUser}</div>` : ''}
+        </div>
+        <div class="tx-amount ${e.type}">${e.type==='income'?'+':'-'} ${fmt(e.amount)}</div>
+        <button class="tx-del" data-id="${e.id}" title="حذف">✕</button>
+      </div>
+    `).join('')}
+  `).join('');
+
+  txList.querySelectorAll('.tx-del').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      try{
+        await deleteDoc(doc(db, "transactions", btn.dataset.id));
+        showToast('تراکنش حذف شد');
+      }catch(e){ showToast('خطا در حذف، دوباره تلاش کنید'); }
+    });
+  });
+}
+
+// live sync
+onSnapshot(query(colRef, orderBy("date","desc")),
+  (snapshot)=>{
+    entries = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
+    setSync('ok');
+    render();
+  },
+  (err)=>{ setSync('error'); }
+);
+
+function openSheet(){
+  $('overlay').classList.add('open');
+  setType('income');
+  $('fAmount').value = '';
+  $('fNote').value = '';
+}
+function closeSheet(){ $('overlay').classList.remove('open'); }
+
+$('openAdd').addEventListener('click', openSheet);
+$('btnCancel').addEventListener('click', closeSheet);
+$('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeSheet(); });
+$('btnIncome').addEventListener('click', ()=>setType('income'));
+$('btnExpense').addEventListener('click', ()=>setType('expense'));
+
+$('btnSave').addEventListener('click', async ()=>{
+  const amount = Number($('fAmount').value);
+  if(!amount || amount <= 0){ showToast('مبلغ رو درست وارد کنید'); return; }
+  const btn = $('btnSave');
+  btn.disabled = true;
+  try{
+    await addDoc(colRef, {
+      type: currentType,
+      category: $('fCategory').value,
+      amount: amount,
+      note: $('fNote').value.trim(),
+      byUser: userName || 'ناشناس',
+      date: new Date().toISOString()
+    });
+    closeSheet();
+    showToast('ثبت شد ✓');
+  }catch(e){
+    showToast('خطا در ثبت، دوباره تلاش کنید');
+  }
+  btn.disabled = false;
+});
+
+todayLabel();
+populateCategories();
+</script>
+</body>
+</html>
