@@ -218,8 +218,33 @@
   /* products manager */
   .prod-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);}
   .prod-name{flex:1;font-size:13.5px;font-weight:600;}
+  .prod-sub{font-size:10.5px;color:var(--text-muted);font-weight:400;margin-top:2px;}
   .prod-icon-btn{font-size:15px;padding:6px 8px;color:var(--text-muted);}
   .prod-icon-btn:hover{color:var(--text);}
+  .prod-row-wrap{border-bottom:1px solid var(--border);}
+  .prod-row-wrap .prod-row{border-bottom:none;}
+  .prod-edit-form{padding:0 0 12px;display:flex;flex-direction:column;gap:8px;}
+  .prod-edit-form input{padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;}
+  .prod-save-btn{background:var(--green);color:#fff;padding:10px;border-radius:10px;font-weight:700;font-size:12.5px;}
+  .prod-add-form{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .prod-add-form input{padding:11px 12px;border-radius:11px;border:1.5px solid var(--border);font-size:13px;}
+  .prod-add-prices{display:flex;gap:6px;}
+  .prod-add-prices input{flex:1;min-width:0;}
+  .prod-add-form button{background:var(--text);color:#fff;padding:12px;border-radius:12px;font-weight:700;font-size:13px;}
+
+  /* sale cart (multi-item invoice) */
+  .price-mode-btn{padding:11px 4px;border-radius:12px;border:1.5px solid var(--border);font-weight:700;font-size:12.5px;background:#fff;color:var(--text-muted);flex:1;}
+  .price-mode-btn.active{background:var(--text);color:#fff;border-color:var(--text);}
+  .add-line-btn{width:100%;padding:11px;border-radius:12px;background:var(--surface);color:var(--text);font-weight:700;font-size:13px;border:1.5px dashed var(--border);}
+  .cart-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .cart-line-info{flex:1;min-width:0;}
+  .cart-line-name{font-size:13px;font-weight:700;}
+  .cart-line-mode{font-weight:400;color:var(--text-muted);font-size:11.5px;}
+  .cart-line-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  .cart-line-del{color:var(--text-muted);font-size:15px;padding:4px 6px;flex-shrink:0;}
+  .cart-totals{margin-top:12px;padding:12px;border-radius:12px;background:var(--surface);}
+  .cart-total-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+  .cart-total-row b{font-weight:800;}
   .prod-add-row{display:flex;gap:8px;margin-top:14px;}
   .prod-add-row input{flex:1;}
   .prod-add-row button{background:var(--text);color:#fff;padding:0 16px;border-radius:12px;font-weight:700;font-size:13px;}
@@ -433,18 +458,45 @@ document.getElementById('tabHistory').addEventListener('click', ()=>{
       <button class="type-btn income active" id="btnIncome" type="button">فروش / درآمد</button>
       <button class="type-btn expense" id="btnExpense" type="button">هزینه / خرید</button>
     </div>
-    <div class="field">
-      <label>
-        <span id="catFieldLabel">جنس فروخته‌شده</span>
-        <span class="manage-link" id="openProductManager">مدیریت اجناس</span>
-      </label>
-      <select id="fCategory"></select>
+
+    <div id="expenseFields">
+      <div class="field">
+        <label><span>دسته‌بندی هزینه</span></label>
+        <select id="fCategory"></select>
+      </div>
+      <div class="field">
+        <label>مبلغ (تومان)</label>
+        <input type="number" id="fAmount" placeholder="مثلاً ۲۵۰۰۰۰۰" inputmode="numeric">
+        <div id="fAmountWords" style="font-size:11.5px;color:var(--text-muted);margin-top:6px;min-height:14px;"></div>
+      </div>
     </div>
-    <div class="field">
-      <label>مبلغ (تومان)</label>
-      <input type="number" id="fAmount" placeholder="مثلاً ۲۵۰۰۰۰۰" inputmode="numeric">
-      <div id="fAmountWords" style="font-size:11.5px;color:var(--text-muted);margin-top:6px;min-height:14px;"></div>
+
+    <div id="incomeFields">
+      <div class="field">
+        <label><span>افزودن جنس به فاکتور</span><span class="manage-link" id="openProductManager">مدیریت اجناس</span></label>
+        <select id="lineProduct"></select>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input type="number" id="lineQty" placeholder="تعداد" inputmode="numeric" value="1" style="flex:1;min-width:0;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);font-size:14px;">
+        <button type="button" class="price-mode-btn active" id="lineModeConsumer" data-mode="consumer">مصرف</button>
+        <button type="button" class="price-mode-btn" id="lineModePartner" data-mode="partner">همکار</button>
+      </div>
+      <div id="linePreview" style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;min-height:14px;"></div>
+      <button type="button" class="add-line-btn" id="addLineBtn">+ افزودن به فاکتور</button>
+
+      <div id="cartList"></div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>تخفیف (اختیاری، تومان) — از سود کم می‌شه</label>
+        <input type="number" id="fDiscount" placeholder="۰" inputmode="numeric">
+      </div>
+
+      <div class="cart-totals" id="cartTotals" style="display:none;">
+        <div class="cart-total-row"><span>مجموع فروش این فاکتور</span><b id="cartTotalAmount">۰</b></div>
+        <div class="cart-total-row"><span>سود ناخالص این فاکتور</span><b id="cartTotalProfit">۰</b></div>
+      </div>
     </div>
+
     <div class="field">
       <label>توضیح (اختیاری)</label>
       <input type="text" id="fNote" placeholder="مثلاً نام مشتری یا توضیح کوتاه">
@@ -460,9 +512,14 @@ document.getElementById('tabHistory').addEventListener('click', ()=>{
   <div class="sheet">
     <div class="sheet-title">مدیریت اجناس <button class="btn-cancel" style="flex:0;padding:6px 12px;border-radius:10px;" id="closeProdManager">بستن</button></div>
     <div id="prodList"></div>
-    <div class="prod-add-row">
+    <div class="prod-add-form">
       <input type="text" id="newProdName" placeholder="نام جنس جدید">
-      <button id="addProdBtn">افزودن</button>
+      <div class="prod-add-prices">
+        <input type="number" id="newProdCost" placeholder="قیمت خرید" inputmode="numeric">
+        <input type="number" id="newProdConsumer" placeholder="قیمت مصرف" inputmode="numeric">
+        <input type="number" id="newProdPartner" placeholder="قیمت همکار" inputmode="numeric">
+      </div>
+      <button id="addProdBtn">افزودن جنس</button>
     </div>
   </div>
 </div>
@@ -639,28 +696,42 @@ function todayLabel(){
 function populateCategories(){
   const sel = $('fCategory');
   sel.innerHTML = '';
-  const list = currentType === 'income' ? (products.length ? products.map(p=>p.name) : DEFAULT_PRODUCTS) : EXPENSE_CATS;
-  list.forEach(c=>{
+  EXPENSE_CATS.forEach(c=>{
     const o = document.createElement('option');
     o.value = c; o.textContent = c;
     sel.appendChild(o);
   });
 }
 
+function populateProductSelect(){
+  const sel = $('lineProduct');
+  if(!sel) return;
+  const prevVal = sel.value;
+  sel.innerHTML = '';
+  products.forEach(p=>{
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    sel.appendChild(o);
+  });
+  if(products.some(p=>p.id===prevVal)) sel.value = prevVal;
+  updateLinePreview();
+}
+
 function setType(type){
   currentType = type;
   $('btnIncome').classList.toggle('active', type==='income');
   $('btnExpense').classList.toggle('active', type==='expense');
-  $('catFieldLabel').textContent = type==='income' ? 'جنس فروخته‌شده' : 'دسته‌بندی هزینه';
-  $('openProductManager').style.display = type==='income' ? 'inline' : 'none';
+  $('incomeFields').style.display = type==='income' ? 'block' : 'none';
+  $('expenseFields').style.display = type==='expense' ? 'block' : 'none';
   populateCategories();
+  populateProductSelect();
 }
 
 async function seedDefaultProductsIfEmpty(){
   if(productsSeeded) return;
   productsSeeded = true;
   for(const name of DEFAULT_PRODUCTS){
-    try{ await addDoc(prodCol, {name, createdAt: Date.now()}); }catch(e){}
+    try{ await addDoc(prodCol, {name, costPrice:0, consumerPrice:0, partnerPrice:0, createdAt: Date.now()}); }catch(e){}
   }
 }
 
@@ -668,27 +739,52 @@ onSnapshot(query(prodCol, orderBy("createdAt","asc")), (snap)=>{
   products = snap.docs.map(d=>({id:d.id, ...d.data()}));
   if(snap.empty){ seedDefaultProductsIfEmpty(); }
   renderProductList();
-  populateCategories();
+  populateProductSelect();
 });
 
 function renderProductList(){
   const list = $('prodList');
   if(products.length===0){ list.innerHTML = '<div class="empty">هنوز جنسی اضافه نشده</div>'; return; }
-  list.innerHTML = products.map(p=>`
-    <div class="prod-row">
-      <div class="prod-name">${p.name}</div>
-      <button class="prod-icon-btn" data-edit="${p.id}" title="ویرایش">✎</button>
-      <button class="prod-icon-btn" data-del="${p.id}" title="حذف">✕</button>
-    </div>
-  `).join('');
+  list.innerHTML = products.map(p=>{
+    const cost = p.costPrice||0, cons = p.consumerPrice||0, part = p.partnerPrice||0;
+    return `
+    <div class="prod-row-wrap" data-id="${p.id}">
+      <div class="prod-row">
+        <div class="prod-name">${p.name}<div class="prod-sub">خرید ${fmt(cost)} • مصرف ${fmt(cons)} • همکار ${fmt(part)}</div></div>
+        <button class="prod-icon-btn" data-edit="${p.id}" title="ویرایش">✎</button>
+        <button class="prod-icon-btn" data-del="${p.id}" title="حذف">✕</button>
+      </div>
+      <div class="prod-edit-form" id="editForm-${p.id}" style="display:none;">
+        <input type="text" class="pe-name" value="${p.name}" placeholder="نام">
+        <div class="prod-add-prices">
+          <input type="number" class="pe-cost" value="${cost||''}" placeholder="قیمت خرید" inputmode="numeric">
+          <input type="number" class="pe-cons" value="${cons||''}" placeholder="قیمت مصرف" inputmode="numeric">
+          <input type="number" class="pe-part" value="${part||''}" placeholder="قیمت همکار" inputmode="numeric">
+        </div>
+        <button class="prod-save-btn" data-save="${p.id}">ذخیره تغییرات</button>
+      </div>
+    </div>`;
+  }).join('');
+
   list.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const form = $('editForm-'+btn.dataset.edit);
+      form.style.display = form.style.display==='none' ? 'flex' : 'none';
+    });
+  });
+  list.querySelectorAll('[data-save]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
-      const p = products.find(x=>x.id===btn.dataset.edit);
-      const newName = prompt('نام جدید جنس:', p.name);
-      if(newName && newName.trim() && newName.trim()!==p.name){
-        try{ await updateDoc(doc(db,"products",p.id), {name:newName.trim()}); showToast('ویرایش شد'); }
-        catch(e){ showToast('خطا در ویرایش'); }
-      }
+      const id = btn.dataset.save;
+      const wrap = document.querySelector(`.prod-row-wrap[data-id="${id}"]`);
+      const name = wrap.querySelector('.pe-name').value.trim();
+      const cost = Number(wrap.querySelector('.pe-cost').value)||0;
+      const cons = Number(wrap.querySelector('.pe-cons').value)||0;
+      const part = Number(wrap.querySelector('.pe-part').value)||0;
+      if(!name){ showToast('اسم جنس نمی‌تونه خالی باشه'); return; }
+      try{
+        await updateDoc(doc(db,"products",id), {name, costPrice:cost, consumerPrice:cons, partnerPrice:part});
+        showToast('ویرایش شد');
+      }catch(e){ showToast('خطا در ویرایش'); }
     });
   });
   list.querySelectorAll('[data-del]').forEach(btn=>{
@@ -706,12 +802,93 @@ $('prodOverlay').addEventListener('click', (e)=>{ if(e.target.id==='prodOverlay'
 $('addProdBtn').addEventListener('click', async ()=>{
   const val = $('newProdName').value.trim();
   if(!val) return;
+  const cost = Number($('newProdCost').value)||0;
+  const cons = Number($('newProdConsumer').value)||0;
+  const part = Number($('newProdPartner').value)||0;
   try{
-    await addDoc(prodCol, {name: val, createdAt: Date.now()});
+    await addDoc(prodCol, {name: val, costPrice:cost, consumerPrice:cons, partnerPrice:part, createdAt: Date.now()});
     $('newProdName').value = '';
+    $('newProdCost').value = '';
+    $('newProdConsumer').value = '';
+    $('newProdPartner').value = '';
     showToast('اضافه شد');
   }catch(e){ showToast('خطا در افزودن'); }
 });
+
+/* ================= sale cart (multi-item invoice) ================= */
+let cart = [];
+let currentLineMode = 'consumer';
+
+function productPriceForMode(p, mode){ return mode==='partner' ? (p.partnerPrice||0) : (p.consumerPrice||0); }
+
+function setLineMode(mode){
+  currentLineMode = mode;
+  $('lineModeConsumer').classList.toggle('active', mode==='consumer');
+  $('lineModePartner').classList.toggle('active', mode==='partner');
+  updateLinePreview();
+}
+$('lineModeConsumer').addEventListener('click', ()=>setLineMode('consumer'));
+$('lineModePartner').addEventListener('click', ()=>setLineMode('partner'));
+$('lineProduct').addEventListener('change', updateLinePreview);
+$('lineQty').addEventListener('input', updateLinePreview);
+
+function updateLinePreview(){
+  const p = products.find(x=>x.id===$('lineProduct').value);
+  const qty = Number($('lineQty').value)||0;
+  if(!p || qty<=0){ $('linePreview').textContent = ''; return; }
+  const unit = productPriceForMode(p, currentLineMode);
+  const total = unit*qty;
+  const profit = (unit-(p.costPrice||0))*qty;
+  $('linePreview').textContent = `جمع این قلم: ${fmt(total)} تومان • سود: ${fmt(profit)} تومان`;
+}
+
+$('addLineBtn').addEventListener('click', ()=>{
+  const p = products.find(x=>x.id===$('lineProduct').value);
+  const qty = Number($('lineQty').value);
+  if(!p){ showToast('یه جنس انتخاب کنید'); return; }
+  if(!qty || qty<=0){ showToast('تعداد رو درست وارد کنید'); return; }
+  const unit = productPriceForMode(p, currentLineMode);
+  const cost = p.costPrice||0;
+  cart.push({
+    productId: p.id, name: p.name, qty, mode: currentLineMode,
+    unitPrice: unit, costPrice: cost,
+    lineTotal: unit*qty, lineProfit: (unit-cost)*qty
+  });
+  $('lineQty').value = '1';
+  renderCart();
+  updateLinePreview();
+});
+
+function renderCart(){
+  const list = $('cartList');
+  if(cart.length===0){
+    list.innerHTML = '';
+    $('cartTotals').style.display = 'none';
+    return;
+  }
+  list.innerHTML = cart.map((line,i)=>`
+    <div class="cart-line">
+      <div class="cart-line-info">
+        <div class="cart-line-name">${line.name} × ${line.qty} <span class="cart-line-mode">(${line.mode==='partner'?'همکار':'مصرف'})</span></div>
+        <div class="cart-line-sub">${fmt(line.lineTotal)} تومان • سود ${fmt(line.lineProfit)} تومان</div>
+      </div>
+      <button class="cart-line-del" data-idx="${i}">✕</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-idx]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      cart.splice(Number(btn.dataset.idx), 1);
+      renderCart();
+    });
+  });
+  const totalAmount = cart.reduce((s,l)=>s+l.lineTotal, 0);
+  const totalProfit = cart.reduce((s,l)=>s+l.lineProfit, 0);
+  const discount = Number($('fDiscount').value)||0;
+  $('cartTotalAmount').textContent = fmt(Math.max(0, totalAmount - discount));
+  $('cartTotalProfit').textContent = fmt(totalProfit - discount);
+  $('cartTotals').style.display = 'block';
+}
+$('fDiscount').addEventListener('input', renderCart);
 
 /* ================= sync indicator ================= */
 function setSync(state){
@@ -940,6 +1117,7 @@ function render(){
         <div class="tx-badge ${e.type}">${e.type==='income' ? '↑' : '↓'}</div>
         <div class="tx-info">
           <div class="tx-cat">${e.category}</div>
+          ${e.qty ? `<div class="tx-note">×${e.qty} ${e.priceMode==='partner'?'(همکار)':'(مصرف)'} • سود ${fmt(e.lineProfit||0)}</div>` : ''}
           ${e.note ? `<div class="tx-note">${e.note}</div>` : ''}
           ${e.byUser ? `<div class="tx-who">ثبت توسط ${e.byUser}</div>` : ''}
         </div>
@@ -975,10 +1153,16 @@ onSnapshot(query(txCol, orderBy("date","desc")),
 
 function openSheet(){
   $('overlay').classList.add('open');
+  cart = [];
+  currentLineMode = 'consumer';
   setType('income');
+  setLineMode('consumer');
   $('fAmount').value = '';
   $('fNote').value = '';
   $('fAmountWords').textContent = '';
+  $('fDiscount').value = '';
+  $('lineQty').value = '1';
+  renderCart();
   $('btnSave').disabled = false;
 }
 function closeSheet(){ $('overlay').classList.remove('open'); }
@@ -990,25 +1174,71 @@ $('btnIncome').addEventListener('click', ()=>setType('income'));
 $('btnExpense').addEventListener('click', ()=>setType('expense'));
 
 $('btnSave').addEventListener('click', async ()=>{
-  const amount = Number($('fAmount').value);
-  if(!amount || amount <= 0){ showToast('مبلغ رو درست وارد کنید'); return; }
   const btn = $('btnSave');
-  btn.disabled = true;
-  try{
-    await addDoc(txCol, {
-      type: currentType,
-      category: $('fCategory').value,
-      amount: amount,
-      note: $('fNote').value.trim(),
-      byUser: userName || 'ناشناس',
-      date: new Date().toISOString()
-    });
-    closeSheet();
-    showToast('ثبت شد ✓');
-  }catch(e){
-    showToast('خطا در ثبت، دوباره تلاش کنید');
-  }finally{
-    btn.disabled = false;
+
+  if(currentType === 'income'){
+    if(cart.length===0){ showToast('حداقل یه جنس به فاکتور اضافه کنید'); return; }
+    btn.disabled = true;
+    try{
+      const groupId = 'inv_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      const note = $('fNote').value.trim();
+      const dateISO = new Date().toISOString();
+      const uname = userName || 'ناشناس';
+      for(const line of cart){
+        await addDoc(txCol, {
+          type: 'income',
+          category: line.name,
+          amount: line.lineTotal,
+          qty: line.qty,
+          priceMode: line.mode,
+          unitPrice: line.unitPrice,
+          costPrice: line.costPrice,
+          lineProfit: line.lineProfit,
+          groupId,
+          note,
+          byUser: uname,
+          date: dateISO
+        });
+      }
+      const discount = Number($('fDiscount').value)||0;
+      if(discount > 0){
+        await addDoc(txCol, {
+          type: 'expense',
+          category: 'تخفیف مشتری',
+          amount: discount,
+          groupId,
+          note,
+          byUser: uname,
+          date: dateISO
+        });
+      }
+      closeSheet();
+      showToast('فاکتور ثبت شد ✓');
+    }catch(e){
+      showToast('خطا در ثبت، دوباره تلاش کنید');
+    }finally{
+      btn.disabled = false;
+    }
+  } else {
+    const amount = Number($('fAmount').value);
+    if(!amount || amount <= 0){ showToast('مبلغ رو درست وارد کنید'); return; }
+    btn.disabled = true;
+    try{
+      await addDoc(txCol, {
+        type: 'expense',
+        category: $('fCategory').value,
+        amount: amount,
+        note: $('fNote').value.trim(),
+        byUser: userName || 'ناشناس',
+        date: new Date().toISOString()
+      });
+      closeSheet();
+      showToast('ثبت شد ✓');
+    }catch(e){
+      showToast('خطا در ثبت، دوباره تلاش کنید');
+    }finally{
+      btn.disabled = false;
+    }
   }
 });
 
