@@ -208,6 +208,31 @@
     background-position:left 14px center;
     padding-left:34px;
   }
+
+  /* obligations (چک/وام/بدهی/کرایه) */
+  .ob-row{display:flex;align-items:flex-start;gap:8px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .ob-row:last-child{border-bottom:none;}
+  .ob-row-paid{opacity:.5;}
+  .ob-info{flex:1;min-width:0;}
+  .ob-title{font-size:13.5px;font-weight:700;}
+  .ob-sub{font-size:11px;color:var(--text-muted);margin-top:3px;}
+  .ob-note{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  .ob-status{display:inline-block;font-size:10.5px;font-weight:700;margin-top:6px;padding:3px 9px;border-radius:8px;}
+  .ob-status-normal{background:var(--surface);color:var(--text-muted);}
+  .ob-status-urgent{background:#FFF3CD;color:#8A6110;}
+  .ob-status-overdue{background:var(--red-bg);color:var(--red);}
+  .ob-status-paid{background:var(--green-bg);color:var(--green);}
+  .ob-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+  .ob-icon-btn{font-size:14px;padding:6px 9px;border-radius:9px;background:var(--surface);color:var(--text);}
+  .ob-icon-btn:active{transform:scale(.94);}
+
+  .ob-warning-card{
+    background:linear-gradient(135deg,#FFF3E0,#FFE3D9);
+    border:1.5px solid #F4B183;border-radius:16px;padding:14px 16px;margin-bottom:16px;
+  }
+  .ob-warning-title{font-size:13.5px;font-weight:800;color:#9A4C1E;margin-bottom:8px;}
+  .ob-warning-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;color:#7A3B15;}
+  .ob-warning-row b{font-weight:800;color:#B3261E;}
   .field input:focus, .field select:focus{outline:none;border-color:var(--text);}
   .sheet-actions{display:flex;gap:10px;margin-top:6px;}
   .btn{padding:13px;border-radius:12px;font-weight:700;font-size:14px;flex:1;}
@@ -276,9 +301,9 @@
   }
 
   /* tab bar */
-  .tab-bar{display:flex;gap:8px;padding:0 16px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto;}
+  .tab-bar{display:flex;gap:6px;padding:0 16px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto;}
   .tab-btn{
-    flex:1;padding:11px;border-radius:12px;font-weight:700;font-size:13px;
+    flex:1;padding:10px 4px;border-radius:12px;font-weight:700;font-size:11.5px;
     background:var(--surface);color:var(--text-muted);
   }
   .tab-btn.active{background:var(--text);color:#fff;}
@@ -344,13 +369,16 @@
 </header>
 
 <div class="tab-bar">
-  <button class="tab-btn active" id="tabStore">🏪 حساب فروشگاه</button>
-  <button class="tab-btn" id="tabPersonal">💸 خرج‌کرد مغازه</button>
-  <button class="tab-btn" id="tabHistory">📜 تاریخچه ماهانه</button>
+  <button class="tab-btn active" id="tabStore">🏪 فروشگاه</button>
+  <button class="tab-btn" id="tabPersonal">💸 خرج مغازه</button>
+  <button class="tab-btn" id="tabDebts">🧾 چک و بدهی</button>
+  <button class="tab-btn" id="tabHistory">📜 تاریخچه</button>
 </div>
 
 <main>
 <div class="panel active" id="storePanel">
+  <div id="obWarningBanner"></div>
+
   <div class="section-title">تارگت‌ها</div>
   <div class="target-grid">
     <div class="target-card" id="dailyTargetCard">
@@ -414,6 +442,42 @@
   <div id="personalList"><div class="empty">هنوز خرجی ثبت نشده</div></div>
 </div>
 
+<div class="panel" id="debtsPanel">
+  <div class="section-title">افزودن مورد جدید</div>
+  <div class="card">
+    <div class="field">
+      <label>عنوان</label>
+      <input type="text" id="obTitle" placeholder="مثلاً چک بانک ملی، کرایه مرداد">
+    </div>
+    <div class="field">
+      <label>نوع</label>
+      <select id="obType">
+        <option value="check">چک</option>
+        <option value="loan">وام</option>
+        <option value="debt">بدهی</option>
+        <option value="rent">کرایه مغازه</option>
+        <option value="other">سایر</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>مبلغ (تومان)</label>
+      <input type="number" id="obAmount" placeholder="مبلغ" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>تاریخ سررسید</label>
+      <input type="date" id="obDueDate">
+    </div>
+    <div class="field">
+      <label>توضیح (اختیاری)</label>
+      <input type="text" id="obNote" placeholder="توضیح کوتاه">
+    </div>
+    <button class="personal-add-btn" id="obAddBtn">افزودن</button>
+  </div>
+
+  <div class="section-title">لیست چک‌ها و بدهی‌ها</div>
+  <div id="obList"><div class="empty">هنوز موردی ثبت نشده</div></div>
+</div>
+
 <div class="panel" id="historyPanel">
   <div class="section-title">تاریخچه ماهانه</div>
   <div id="monthHistoryList"><div class="empty">هنوز داده‌ای برای نمایش نیست</div></div>
@@ -422,32 +486,21 @@
 
 <button class="fab" id="openAdd"><span class="plus">+</span> ثبت تراکنش</button>
 <script>
-document.getElementById('tabStore').addEventListener('click', ()=>{
-  document.getElementById('tabStore').classList.add('active');
-  document.getElementById('tabPersonal').classList.remove('active');
-  document.getElementById('tabHistory').classList.remove('active');
-  document.getElementById('storePanel').classList.add('active');
-  document.getElementById('personalPanel').classList.remove('active');
-  document.getElementById('historyPanel').classList.remove('active');
-  document.getElementById('openAdd').style.display = 'flex';
-});
-document.getElementById('tabPersonal').addEventListener('click', ()=>{
-  document.getElementById('tabPersonal').classList.add('active');
-  document.getElementById('tabStore').classList.remove('active');
-  document.getElementById('tabHistory').classList.remove('active');
-  document.getElementById('personalPanel').classList.add('active');
-  document.getElementById('storePanel').classList.remove('active');
-  document.getElementById('historyPanel').classList.remove('active');
-  document.getElementById('openAdd').style.display = 'none';
-});
-document.getElementById('tabHistory').addEventListener('click', ()=>{
-  document.getElementById('tabHistory').classList.add('active');
-  document.getElementById('tabStore').classList.remove('active');
-  document.getElementById('tabPersonal').classList.remove('active');
-  document.getElementById('historyPanel').classList.add('active');
-  document.getElementById('storePanel').classList.remove('active');
-  document.getElementById('personalPanel').classList.remove('active');
-  document.getElementById('openAdd').style.display = 'none';
+const TABS = [
+  { tab:'tabStore',    panel:'storePanel',    showFab:true  },
+  { tab:'tabPersonal', panel:'personalPanel', showFab:false },
+  { tab:'tabDebts',    panel:'debtsPanel',    showFab:false },
+  { tab:'tabHistory',  panel:'historyPanel',  showFab:false },
+];
+function switchTab(activeTab){
+  TABS.forEach(t=>{
+    document.getElementById(t.tab).classList.toggle('active', t.tab===activeTab.tab);
+    document.getElementById(t.panel).classList.toggle('active', t.tab===activeTab.tab);
+  });
+  $('openAdd').style.display = activeTab.showFab ? 'flex' : 'none';
+}
+TABS.forEach(t=>{
+  document.getElementById(t.tab).addEventListener('click', ()=>switchTab(t));
 });
 </script>
 
@@ -549,6 +602,7 @@ enableIndexedDbPersistence(db).catch((err)=>{
 const txCol = collection(db, "transactions");
 const prodCol = collection(db, "products");
 const personalCol = collection(db, "personalExpenses");
+const obCol = collection(db, "obligations");
 
 const DEFAULT_PRODUCTS = ['پنل دیواری فومی','کاغذ دیواری','ترمووال','ورق مرمر','کف‌پوش','قرنیز','لمسه','سایر فروش'];
 const EXPENSE_CATS = ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه'];
@@ -1240,6 +1294,109 @@ $('btnSave').addEventListener('click', async ()=>{
       btn.disabled = false;
     }
   }
+});
+
+/* ================= obligations (چک، وام، بدهی، کرایه) ================= */
+const OB_TYPE_LABELS = { check:'چک', loan:'وام', debt:'بدهی', rent:'کرایه مغازه', other:'سایر' };
+const OB_TYPE_EMOJI  = { check:'🧾', loan:'🏦', debt:'📋', rent:'🏠', other:'📌' };
+const OB_WARN_DAYS = 10;
+let obligations = [];
+
+function daysUntil(dueDateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(dueDateStr + 'T00:00:00');
+  return Math.round((due - today) / 86400000);
+}
+function formatJalaliDate(dueDateStr){
+  const [gy,gm,gd] = dueDateStr.split('-').map(Number);
+  const j = toJalaali(gy,gm,gd);
+  return `${j.jd} ${J_MONTHS[j.jm-1]} ${j.jy}`;
+}
+function obStatusLabel(o){
+  const days = daysUntil(o.dueDate);
+  if(o.paid) return {text:'پرداخت شده', cls:'ob-status-paid'};
+  if(days < 0) return {text:`${Math.abs(days)} روز گذشته`, cls:'ob-status-overdue'};
+  if(days === 0) return {text:'امروز سررسیده', cls:'ob-status-urgent'};
+  if(days <= OB_WARN_DAYS) return {text:`${days} روز مونده`, cls:'ob-status-urgent'};
+  return {text:`${days} روز مونده`, cls:'ob-status-normal'};
+}
+
+onSnapshot(query(obCol, orderBy("dueDate","asc")), (snap)=>{
+  obligations = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  renderObligations();
+  renderObligationWarning();
+});
+
+function renderObligations(){
+  const list = $('obList');
+  if(obligations.length===0){ list.innerHTML = '<div class="empty">هنوز موردی ثبت نشده</div>'; return; }
+  const sorted = [...obligations].sort((a,b)=>{
+    if(!!a.paid !== !!b.paid) return a.paid ? 1 : -1;
+    return a.dueDate.localeCompare(b.dueDate);
+  });
+  list.innerHTML = sorted.map(o=>{
+    const st = obStatusLabel(o);
+    return `
+    <div class="ob-row ${o.paid?'ob-row-paid':''}">
+      <div class="ob-info">
+        <div class="ob-title">${OB_TYPE_EMOJI[o.type]||'📌'} ${o.title}</div>
+        <div class="ob-sub">${OB_TYPE_LABELS[o.type]||'سایر'} • ${fmt(o.amount||0)} تومان • سررسید ${formatJalaliDate(o.dueDate)}</div>
+        ${o.note ? `<div class="ob-note">${o.note}</div>` : ''}
+        <div class="ob-status ${st.cls}">${st.text}</div>
+      </div>
+      <div class="ob-actions">
+        <button class="ob-icon-btn" data-paid="${o.id}" title="${o.paid?'برگردون به پرداخت‌نشده':'پرداخت شد'}">${o.paid?'↺':'✓'}</button>
+        <button class="ob-icon-btn" data-obdel="${o.id}" title="حذف">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-paid]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const o = obligations.find(x=>x.id===btn.dataset.paid);
+      if(!o) return;
+      try{ await updateDoc(doc(db,"obligations",o.id), {paid: !o.paid}); }
+      catch(e){ showToast('خطا در ثبت'); }
+    });
+  });
+  list.querySelectorAll('[data-obdel]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('این مورد حذف بشه؟')) return;
+      try{ await deleteDoc(doc(db,"obligations",btn.dataset.obdel)); showToast('حذف شد'); }
+      catch(e){ showToast('خطا در حذف'); }
+    });
+  });
+}
+
+function renderObligationWarning(){
+  const banner = $('obWarningBanner');
+  const urgent = obligations.filter(o=>!o.paid && daysUntil(o.dueDate) <= OB_WARN_DAYS);
+  if(urgent.length===0){ banner.innerHTML=''; return; }
+  const sorted = [...urgent].sort((a,b)=>daysUntil(a.dueDate)-daysUntil(b.dueDate));
+  banner.innerHTML = `
+    <div class="ob-warning-card">
+      <div class="ob-warning-title">⚠️ ${sorted.length} مورد نزدیک به سررسید</div>
+      ${sorted.map(o=>{
+        const days = daysUntil(o.dueDate);
+        const dayLabel = days < 0 ? `${Math.abs(days)} روز گذشته!` : days===0 ? 'امروز!' : `${days} روز مونده`;
+        return `<div class="ob-warning-row"><span>${OB_TYPE_EMOJI[o.type]||'📌'} ${o.title} (${fmt(o.amount||0)} ت)</span><b>${dayLabel}</b></div>`;
+      }).join('')}
+    </div>`;
+}
+
+$('obAddBtn').addEventListener('click', async ()=>{
+  const title = $('obTitle').value.trim();
+  const type = $('obType').value;
+  const amount = Number($('obAmount').value)||0;
+  const dueDate = $('obDueDate').value;
+  const note = $('obNote').value.trim();
+  if(!title){ showToast('عنوان رو وارد کنید'); return; }
+  if(!dueDate){ showToast('تاریخ سررسید رو انتخاب کنید'); return; }
+  try{
+    await addDoc(obCol, {title, type, amount, dueDate, note, paid:false, createdAt: Date.now()});
+    $('obTitle').value=''; $('obAmount').value=''; $('obDueDate').value=''; $('obNote').value='';
+    showToast('اضافه شد');
+  }catch(e){ showToast('خطا در افزودن'); }
 });
 
 /* ================= personal expenses ================= */
