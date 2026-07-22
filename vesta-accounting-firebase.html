@@ -209,6 +209,9 @@
     padding-left:34px;
   }
 
+  .jalali-date-row{display:flex;gap:6px;}
+  .jalali-date-row select{flex:1;min-width:0;padding-left:8px;background-position:left 8px center;}
+
   /* obligations (چک/وام/بدهی/کرایه) */
   .ob-row{display:flex;align-items:flex-start;gap:8px;padding:12px 0;border-bottom:1px solid var(--border);}
   .ob-row:last-child{border-bottom:none;}
@@ -464,8 +467,12 @@
       <input type="number" id="obAmount" placeholder="مبلغ" inputmode="numeric">
     </div>
     <div class="field">
-      <label>تاریخ سررسید</label>
-      <input type="date" id="obDueDate">
+      <label>تاریخ سررسید (شمسی)</label>
+      <div class="jalali-date-row">
+        <select id="obDueDay"></select>
+        <select id="obDueMonth"></select>
+        <select id="obDueYear"></select>
+      </div>
     </div>
     <div class="field">
       <label>توضیح (اختیاری)</label>
@@ -1384,17 +1391,49 @@ function renderObligationWarning(){
     </div>`;
 }
 
+function populateJalaliDatePicker(){
+  const now = new Date();
+  const today = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
+  const monthSel = $('obDueMonth'), yearSel = $('obDueYear'), daySel = $('obDueDay');
+
+  monthSel.innerHTML = J_MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  const years = [];
+  for(let y = today.jy; y <= today.jy + 5; y++) years.push(y);
+  yearSel.innerHTML = years.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  function refreshDays(keepDay){
+    const jy = Number(yearSel.value), jm = Number(monthSel.value);
+    const len = jalaaliMonthLength(jy, jm);
+    const wanted = keepDay || Number(daySel.value) || 1;
+    daySel.innerHTML = Array.from({length:len}, (_,i)=>i+1).map(d=>`<option value="${d}">${d}</option>`).join('');
+    daySel.value = Math.min(wanted, len);
+  }
+  monthSel.addEventListener('change', ()=>refreshDays());
+  yearSel.addEventListener('change', ()=>refreshDays());
+
+  yearSel.value = today.jy;
+  monthSel.value = today.jm;
+  refreshDays(today.jd);
+}
+function getSelectedDueDateISO(){
+  const jy = Number($('obDueYear').value);
+  const jm = Number($('obDueMonth').value);
+  const jd = Number($('obDueDay').value);
+  return jalaliDayDateKey(jy, jm, jd);
+}
+populateJalaliDatePicker();
+
 $('obAddBtn').addEventListener('click', async ()=>{
   const title = $('obTitle').value.trim();
   const type = $('obType').value;
   const amount = Number($('obAmount').value)||0;
-  const dueDate = $('obDueDate').value;
+  const dueDate = getSelectedDueDateISO();
   const note = $('obNote').value.trim();
   if(!title){ showToast('عنوان رو وارد کنید'); return; }
-  if(!dueDate){ showToast('تاریخ سررسید رو انتخاب کنید'); return; }
   try{
     await addDoc(obCol, {title, type, amount, dueDate, note, paid:false, createdAt: Date.now()});
-    $('obTitle').value=''; $('obAmount').value=''; $('obDueDate').value=''; $('obNote').value='';
+    $('obTitle').value=''; $('obAmount').value=''; $('obNote').value='';
+    populateJalaliDatePicker();
     showToast('اضافه شد');
   }catch(e){ showToast('خطا در افزودن'); }
 });
