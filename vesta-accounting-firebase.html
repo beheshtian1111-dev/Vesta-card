@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>حسابدار وستا</title>
@@ -980,12 +983,19 @@ function computeTargets(){
   const monthLen = jalaaliMonthLength(todayJ.jy, todayJ.jm);
 
   // daily net profit map by gregorian date key
+  // income: use the real profit margin (lineProfit) when available (new cart-based sales),
+  // falling back to the full amount only for legacy entries that predate cost tracking.
+  // expense (including customer discounts, logged as an expense): subtracts in full, unchanged.
   const dailyProfit = {};
   entries.forEach(e=>{
     const d = new Date(e.date);
     const key = dateKey(d);
-    const amt = Number(e.amount);
-    dailyProfit[key] = (dailyProfit[key]||0) + (e.type==='income' ? amt : -amt);
+    if(e.type === 'income'){
+      const profitAmt = (e.lineProfit !== undefined && e.lineProfit !== null) ? Number(e.lineProfit) : Number(e.amount);
+      dailyProfit[key] = (dailyProfit[key]||0) + profitAmt;
+    } else {
+      dailyProfit[key] = (dailyProfit[key]||0) - Number(e.amount);
+    }
   });
 
   let carry = 0;
