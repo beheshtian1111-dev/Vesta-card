@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>اطلاعات حساب بانکی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#05070f;
+    --bg-2:#0b1120;
+    --navy:#0f1b3d;
+    --card-bg:rgba(255,255,255,0.05);
+    --card-border:rgba(255,255,255,0.12);
+    --gold:#d4af6a;
+    --gold-bright:#f0cf8a;
+    --neon:#39ffb0;
+    --text-main:#f4f6fb;
+    --text-dim:#9aa4bf;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(212,175,106,0.10), transparent 45%),
+      radial-gradient(circle at 90% 15%, rgba(57,255,176,0.08), transparent 40%),
+      linear-gradient(160deg, var(--bg-1) 0%, var(--navy) 55%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    font-family:'Vazirmatn', sans-serif;
+    color:var(--text-main);
+    min-height:100vh;
+  }
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+  }
+  .wrap{
+    width:100%;
+    max-width:420px;
+    margin:0 auto;
+  }
+  .header{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .header .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    padding:6px 16px;
+    border-radius:999px;
+    font-size:12px;
+    color:var(--gold-bright);
+    letter-spacing:.5px;
+    margin-bottom:14px;
+  }
+  .header h1{
+    font-size:20px;
+    font-weight:700;
+    margin:0 0 4px;
+    color:var(--text-main);
+  }
+  .header p{
+    margin:0;
+    font-size:13px;
+    color:var(--text-dim);
+  }
+
+  .card{
+    position:relative;
+    background:linear-gradient(155deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border:1px solid var(--card-border);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border-radius:22px;
+    padding:22px;
+    margin-bottom:16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow:hidden;
+  }
+  .card::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg, rgba(212,175,106,0.06), transparent 40%, rgba(57,255,176,0.05));
+    pointer-events:none;
+  }
+
+  .bank-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .bank-name{
+    font-size:15px;
+    font-weight:600;
+    color:var(--gold-bright);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .bank-name .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--neon);
+    box-shadow:0 0 8px var(--neon);
+  }
+  .owner-name{
+    font-size:13px;
+    color:var(--text-dim);
+    font-weight:500;
+  }
+
+  .field{
+    position:relative;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    cursor:pointer;
+    user-select:none;
+    -webkit-user-select:none;
+    transition: transform .15s ease, background .2s ease, border-color .2s ease;
+    overflow:hidden;
+  }
+  .field:last-child{margin-bottom:0;}
+  .field:active{
+    transform:scale(0.97);
+    background:rgba(255,255,255,0.08);
+    border-color:rgba(212,175,106,0.4);
+  }
+  .field .label{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .field .label .copy-icon{
+    font-size:13px;
+    opacity:.7;
+  }
+  .field .value{
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:1px;
+    direction:ltr;
+    text-align:right;
+    color:var(--text-main);
+    font-family:'Vazirmatn', monospace;
+  }
+  .field .value.sheba{
+    font-size:14px;
+    letter-spacing:.5px;
+  }
+
+  .ripple{
+    position:absolute;
+    border-radius:50%;
+    background:rgba(212,175,106,0.35);
+    transform:scale(0);
+    animation:ripple-anim .6s ease-out;
+    pointer-events:none;
+  }
+  @keyframes ripple-anim{
+    to{ transform:scale(3.5); opacity:0; }
+  }
+
+  .qr-card{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  .qr-card .qr-title{
+    font-size:12px;
+    color:var(--text-dim);
+    text-align:center;
+  }
+  .qr-box{
+    background:#fff;
+    padding:12px;
+    border-radius:16px;
+    box-shadow:0 6px 24px rgba(0,0,0,0.4);
+    line-height:0;
+  }
+  .qr-box img, .qr-box canvas{
+    display:block;
+    border-radius:6px;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:18px;
+    opacity:.7;
+  }
+
+  /* Toast */
+  #toast{
+    position:fixed;
+    bottom:28px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(15,23,42,0.92);
+    border:1px solid rgba(57,255,176,0.35);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    color:var(--text-main);
+    padding:12px 22px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:500;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .35s ease, transform .35s ease;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    z-index:999;
+    white-space:nowrap;
+  }
+  #toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <div class="badge">💳 اطلاعات واریز وجه</div>
+    <h1>کارت به کارت</h1>
+    <p>برای کپی، روی هر باکس لمس کنید</p>
+  </div>
+
+  <div class="card">
+    <div class="bank-row">
+      <div class="bank-name"><span class="dot"></span><span id="bankNameDisplay"></span></div>
+      <div class="owner-name" id="ownerNameDisplay"></div>
+    </div>
+
+    <div class="field" id="cardField">
+      <div class="label"><span>شماره کارت</span><span class="copy-icon">📋</span></div>
+      <div class="value" id="cardDisplay"></div>
+    </div>
+
+    <div class="field" id="shebaField">
+      <div class="label"><span>شماره شبا (IBAN)</span><span class="copy-icon">📋</span></div>
+      <div class="value sheba" id="shebaDisplay"></div>
+    </div>
+  </div>
+
+  <div class="footer-note">لطفاً پیش از واریز، نام صاحب حساب را بررسی کنید.</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ===== قابل تغییر =====
+  const CARD_NUMBER   = "0936-2452-2916-5022";
+  const SHEBA_NUMBER  = "IR-6405-7007-7700-0015-5573-0201";
+  const OWNER_NAME    = "محمد شکروی";
+  const BANK_NAME     = "پاسارگاد";
+  // ======================
+
+  document.getElementById('bankNameDisplay').textContent = "بانک " + BANK_NAME;
+  document.getElementById('ownerNameDisplay').textContent = OWNER_NAME;
+  document.getElementById('cardDisplay').textContent = CARD_NUMBER;
+  document.getElementById('shebaDisplay').textContent = SHEBA_NUMBER;
+
+  const cardClean  = CARD_NUMBER.replace(/-/g, '');
+  const shebaClean = SHEBA_NUMBER.replace(/-/g, '');
+
+  let toastTimer;
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    clearTimeout(toastTimer);
+    toast.textContent = msg;
+    toast.classList.add('show');
+    toastTimer = setTimeout(()=>{
+      toast.classList.remove('show');
+    }, 2000);
+  }
+
+  function copyText(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text);
+    }
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  }
+
+  function addRipple(el, e){
+    const rect = el.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - size/2;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top - size/2;
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    el.appendChild(ripple);
+    setTimeout(()=> ripple.remove(), 650);
+  }
+
+  function bindCopy(elId, textToCopy, message){
+    const el = document.getElementById(elId);
+    el.addEventListener('click', function(e){
+      addRipple(el, e);
+      copyText(textToCopy).then(()=> showToast(message));
+    });
+  }
+
+  bindCopy('cardField', cardClean, "شماره کارت کپی شد ✅");
+  bindCopy('shebaField', shebaClean, "شماره شبا کپی شد ✅");
+</script>
+
+</body>
+</html>
