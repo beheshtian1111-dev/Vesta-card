@@ -154,6 +154,7 @@
     font-weight:600;
     letter-spacing:1px;
     direction:ltr;
+    unicode-bidi:plaintext;
     text-align:right;
     color:var(--text-main);
     font-family:'Vazirmatn', monospace;
@@ -258,6 +259,11 @@
       <div class="label"><span>شماره شبا (IBAN)</span><span class="copy-icon">📋</span></div>
       <div class="value sheba" id="shebaDisplay"></div>
     </div>
+
+    <div class="field" id="accountField">
+      <div class="label"><span>شماره حساب</span><span class="copy-icon">📋</span></div>
+      <div class="value" id="accountDisplay"></div>
+    </div>
   </div>
 
   <div class="footer-note">لطفاً پیش از واریز، نام صاحب حساب را بررسی کنید.</div>
@@ -267,19 +273,22 @@
 
 <script>
   // ===== قابل تغییر =====
-  const CARD_NUMBER   = "0936-2452-2916-5022";
-  const SHEBA_NUMBER  = "IR-6405-7007-7700-0015-5573-0201";
-  const OWNER_NAME    = "محمد شکروی";
-  const BANK_NAME     = "پاسارگاد";
+  const CARD_NUMBER    = "0936-2452-2916-5022";
+  const SHEBA_NUMBER   = "IR-6405-7007-7700-0015-5573-0201";
+  const ACCOUNT_NUMBER = "777-888-12626093-1";
+  const OWNER_NAME     = "محمد شکروی";
+  const BANK_NAME      = "پاسارگاد";
   // ======================
 
   document.getElementById('bankNameDisplay').textContent = "بانک " + BANK_NAME;
   document.getElementById('ownerNameDisplay').textContent = OWNER_NAME;
   document.getElementById('cardDisplay').textContent = CARD_NUMBER;
   document.getElementById('shebaDisplay').textContent = SHEBA_NUMBER;
+  document.getElementById('accountDisplay').textContent = ACCOUNT_NUMBER;
 
-  const cardClean  = CARD_NUMBER.replace(/-/g, '');
-  const shebaClean = SHEBA_NUMBER.replace(/-/g, '');
+  const cardClean    = CARD_NUMBER.replace(/-/g, '');
+  const shebaClean   = SHEBA_NUMBER.replace(/-/g, '');
+  const accountClean = ACCOUNT_NUMBER.replace(/-/g, '');
 
   let toastTimer;
   function showToast(msg){
@@ -333,6 +342,7 @@
 
   bindCopy('cardField', cardClean, "شماره کارت کپی شد ✅");
   bindCopy('shebaField', shebaClean, "شماره شبا کپی شد ✅");
+  bindCopy('accountField', accountClean, "شماره حساب کپی شد ✅");
 </script>
 
 </body>
