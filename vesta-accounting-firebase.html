@@ -600,7 +600,8 @@
   <p>رمز دسترسی رو وارد کنید</p>
   <input type="password" id="loginPass" placeholder="رمز" autocomplete="current-password">
   <button id="loginBtn">ورود</button>
-  <div id="loginErr" style="color:var(--red);font-size:12.5px;margin-top:10px;min-height:16px;"></div>
+  <div id="loginErr" style="color:var(--red);font-size:12.5px;margin-top:10px;min-height:16px;max-width:320px;line-height:1.7;"></div>
+  <div id="loginProbe" style="font-size:11.5px;margin-top:6px;min-height:14px;"></div>
 </div>
 <div class="name-gate" id="nameGate">
   <div class="brand-mark">VS</div>
@@ -898,7 +899,7 @@ const SHOP_EMAIL = 'shop@vesta.app';      // the user you create in Supabase > A
 const TABLE = 'vesta_docs';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:false }
+  auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:false, lock: async (name, timeout, fn)=> await fn() }
 });
 
 /* ---- login gate (one password, remembered on the device) ---- */
@@ -909,17 +910,39 @@ function showLogin(msg){
   g.classList.remove('hidden');
   const e = document.getElementById('loginErr'); if(e) e.textContent = msg || '';
 }
+const withTimeout = (p, ms)=> Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms))]);
 async function doLogin(){
   const pass = document.getElementById('loginPass').value;
   if(!pass){ showLogin('رمز رو وارد کنید'); return; }
-  const btn = document.getElementById('loginBtn'); btn.disabled = true;
+  const btn = document.getElementById('loginBtn'); btn.disabled = true; btn.textContent = 'در حال ورود…';
+  showLogin('');
   try{
-    const {error} = await sb.auth.signInWithPassword({email:SHOP_EMAIL, password:pass});
-    if(error){ showLogin(/network|fetch/i.test(error.message) ? 'اتصال برقرار نشد، اینترنت رو چک کنید' : 'رمز اشتباهه'); btn.disabled=false; return; }
-    document.getElementById('loginGate').classList.add('hidden');
-    authOk = true; authResolve(); flush(); reloadAll();
-  }catch(e){ showLogin('اتصال برقرار نشد، اینترنت رو چک کنید'); }
-  btn.disabled = false;
+    const {error} = await withTimeout(sb.auth.signInWithPassword({email:SHOP_EMAIL, password:pass}), 20000);
+    if(error){
+      showLogin(/invalid login|invalid_credentials|invalid grant/i.test(error.message) ? 'رمز اشتباهه' : 'خطا: ' + error.message);
+    } else {
+      document.getElementById('loginGate').classList.add('hidden');
+      authOk = true; authResolve(); flush(); reloadAll();
+    }
+  }catch(e){
+    showLogin(e && e.message === 'timeout'
+      ? 'سرور جواب نداد. اگه VPN خاموشه روشنش کن (یا برعکس) و دوباره امتحان کن'
+      : 'اتصال برقرار نشد: ' + (e && e.message || e));
+  }
+  btn.disabled = false; btn.textContent = 'ورود';
+}
+async function probeServer(){
+  const box = document.getElementById('loginProbe'); if(!box) return;
+  try{
+    const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 8000);
+    const r = await fetch(SUPABASE_URL + '/auth/v1/health', {headers:{apikey:SUPABASE_ANON_KEY}, signal:ctl.signal});
+    clearTimeout(t);
+    box.textContent = r.ok ? '✓ ارتباط با سرور برقراره' : '⚠️ سرور جواب غیرعادی داد (' + r.status + ')';
+    box.style.color = r.ok ? 'var(--green)' : 'var(--red)';
+  }catch(e){
+    box.textContent = '⚠️ به سرور (supabase) وصل نمی‌شه. VPN یا اینترنت رو چک کن';
+    box.style.color = 'var(--red)';
+  }
 }
 async function bootAuth(){
   if(SUPABASE_URL.startsWith('PASTE_')){ showLogin('آدرس و کلید سوپابیس هنوز داخل فایل وارد نشده'); return; }
@@ -929,6 +952,7 @@ async function bootAuth(){
     if(error && /network|fetch/i.test(error.message||'')){ authResolve(); return; }   // offline: work from cache
   }catch(e){ authResolve(); return; }
   showLogin('');
+  probeServer();
 }
 window.addEventListener('DOMContentLoaded', ()=>{
   const b = document.getElementById('loginBtn'); if(b) b.addEventListener('click', doLogin);
