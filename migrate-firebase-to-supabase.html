@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>انتقال اطلاعات حسابدار وستا به Supabase</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Vazirmatn',Tahoma,sans-serif;background:linear-gradient(160deg,#ece4ff,#ffe6f2 55%,#dcf6ea);min-height:100vh;color:#2d2a4a;padding:18px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  h1{font-size:19px;margin:6px 0 4px;} p.sub{font-size:12.5px;color:#7a76a0;margin:0 0 16px;line-height:1.8;}
+  .card{background:rgba(255,255,255,.85);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 6px 22px rgba(139,124,246,.12);}
+  .step{font-weight:800;font-size:14px;margin-bottom:10px;}
+  label{display:block;font-size:12px;color:#7a76a0;margin:10px 0 4px;}
+  input{width:100%;padding:11px 12px;border-radius:12px;border:1.5px solid #e4ddff;font-family:inherit;font-size:13.5px;direction:ltr;text-align:left;background:#fff;}
+  button{width:100%;margin-top:12px;padding:13px;border:none;border-radius:14px;font-family:inherit;font-weight:800;font-size:14px;color:#fff;background:linear-gradient(135deg,#8b7cf6,#e072c8);cursor:pointer;}
+  button.alt{background:linear-gradient(135deg,#7ee8c0,#16b985);} button:disabled{opacity:.5;}
+  button.ghost{background:#f0ecff;color:#5b4fd6;}
+  #log{font-size:12.5px;line-height:2;white-space:pre-wrap;}
+  .ok{color:#0f9f6e;font-weight:700;} .bad{color:#e0405f;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚚 انتقال اطلاعات از Firebase به Supabase</h1>
+  <p class="sub">مرحله ۱ فقط خواندنه و چیزی رو تغییر نمی‌ده (برای این مرحله VPN روشن باشه). مرحله ۲ اطلاعات رو به Supabase می‌فرسته و بدون VPN هم کار می‌کنه. اجرای مجدد خطری نداره، چیزی تکراری ثبت نمی‌شه.</p>
+
+  <div class="card">
+    <div class="step">۱) خواندن از Firebase</div>
+    <button id="readBtn">خواندن اطلاعات (VPN روشن)</button>
+    <button id="dlBtn" class="ghost" disabled>⬇️ دانلود نسخه‌ی پشتیبان (JSON)</button>
+  </div>
+
+  <div class="card">
+    <div class="step">۲) ارسال به Supabase</div>
+    <label>Project URL</label><input id="sbUrl" value="https://wtpwynudjliqktmkevja.supabase.co">
+    <label>anon public key</label><input id="sbKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0cHd5bnVkamxpcWt0bWtldmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MjM2MjYsImV4cCI6MjEwODM5OTYyNn0.m9KV6RTpwfmvgmwJfj1N0xG1M6qL0o7uAzKEwmN460A">
+    <label>ایمیل (همونی که توی Authentication ساختی)</label><input id="sbEmail" value="shop@vesta.app">
+    <label>رمز</label><input id="sbPass" type="password">
+    <button id="sendBtn" class="alt" disabled>ارسال به Supabase</button>
+  </div>
+
+  <div class="card"><div id="log">منتظر دستور شما…</div></div>
+</div>
+
+<script>
+const COLLECTIONS = ['transactions','products','personalExpenses','obligations','settings'];
+const firebaseConfig = {
+  apiKey:"AIzaSyBi8mEf2gsjrJTMVOXP5-azHOK2COa6ieE", authDomain:"vesta-decor-shop.firebaseapp.com",
+  projectId:"vesta-decor-shop", storageBucket:"vesta-decor-shop.firebasestorage.app",
+  messagingSenderId:"674565220612", appId:"1:674565220612:web:5df676e754c568a8880851"
+};
+let DATA = null;
+const $ = id => document.getElementById(id);
+const logEl = $('log');
+const log = (t, cls) => { const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=t; logEl.appendChild(d); };
+const reset = () => { logEl.innerHTML=''; };
+
+function plain(v){                       // Firestore Timestamp -> ISO string, recursively
+  if(v && typeof v.toDate === 'function') return v.toDate().toISOString();
+  if(Array.isArray(v)) return v.map(plain);
+  if(v && typeof v === 'object'){ const o={}; for(const k in v) o[k]=plain(v[k]); return o; }
+  return v;
+}
+
+$('readBtn').onclick = async ()=>{
+  reset(); log('در حال اتصال به Firebase… (اگه گیر کرد، VPN رو چک کن)');
+  $('readBtn').disabled = true;
+  try{
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const db = getFirestore(initializeApp(firebaseConfig));
+    DATA = {};
+    for(const name of COLLECTIONS){
+      const snap = await getDocs(collection(db, name));
+      DATA[name] = snap.docs.map(d=>({id:d.id, data:plain(d.data())}));
+      log(`✓ ${name}: ${DATA[name].length} مورد`, 'ok');
+    }
+    log('خواندن تموم شد. حالا یه نسخه‌ی پشتیبان دانلود کن و بعد مرحله ۲ رو بزن.', 'ok');
+    $('dlBtn').disabled = false; $('sendBtn').disabled = false;
+  }catch(e){
+    log('خطا: ' + (e && e.message || e) + ' — احتمالاً VPN وصل نیست.', 'bad');
+  }
+  $('readBtn').disabled = false;
+};
+
+$('dlBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(DATA, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'vesta-backup-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+};
+
+$('sendBtn').onclick = async ()=>{
+  const url = $('sbUrl').value.trim().replace(/\/$/,''), key = $('sbKey').value.trim();
+  const email = $('sbEmail').value.trim(), pass = $('sbPass').value;
+  if(!url || !key || !pass){ reset(); log('آدرس، کلید و رمز رو کامل وارد کن.', 'bad'); return; }
+  reset(); $('sendBtn').disabled = true;
+  try{
+    log('ورود به Supabase…');
+    const lr = await fetch(url + '/auth/v1/token?grant_type=password', {
+      method:'POST', headers:{'apikey':key,'Content-Type':'application/json'}, body:JSON.stringify({email, password:pass})
+    });
+    const lj = await lr.json();
+    if(!lr.ok) throw new Error('ورود ناموفق: ' + (lj.error_description || lj.msg || lr.status));
+    const H = {'apikey':key, 'Authorization':'Bearer ' + lj.access_token, 'Content-Type':'application/json'};
+    log('✓ وارد شدی', 'ok');
+
+    for(const name of COLLECTIONS){
+      const rows = DATA[name].map(d=>({collection:name, id:d.id, data:d.data}));
+      for(let i=0; i<rows.length; i+=200){
+        const r = await fetch(url + '/rest/v1/vesta_docs?on_conflict=collection,id', {
+          method:'POST', headers:{...H, 'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(rows.slice(i,i+200))
+        });
+        if(!r.ok) throw new Error(name + ': ' + (await r.text()));
+      }
+      const cr = await fetch(url + '/rest/v1/vesta_docs?select=id&collection=eq.' + name, {headers:{...H,'Prefer':'count=exact','Range':'0-0'}});
+      const total = (cr.headers.get('content-range') || '').split('/')[1];
+      const good = Number(total) === rows.length;
+      log(`${good?'✓':'⚠️'} ${name}: ارسال ${rows.length} — داخل Supabase ${total}`, good?'ok':'bad');
+    }
+    log('🎉 انتقال تموم شد. حالا فایل جدید برنامه رو توی گیت‌هاب جایگزین کن.', 'ok');
+  }catch(e){
+    log('خطا: ' + (e && e.message || e), 'bad');
+  }
+  $('sendBtn').disabled = false;
+};
+</script>
+</body>
+</html>
