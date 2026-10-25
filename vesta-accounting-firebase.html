@@ -465,6 +465,30 @@
   @media (max-width:480px){ .tab-btn{padding:10px 2px;font-size:11px;gap:2px;} .tab-bar{gap:4px;padding:0 10px;} }
   @media (min-width:1024px){ #reportPanel{max-width:680px;margin:0 auto;} }
 </style>
+<style id="print-theme">
+  .print-only{display:none;}
+  @media print{
+    @page{ size:A4; margin:14mm; }
+    html,body{background:#fff !important;color:#000 !important;}
+    body > *:not(main){display:none !important;}
+    header,.tab-bar,.fab,.toast,.overlay,.name-gate,.report-seg,.report-actions,#ob-banner,.ob-warning-card{display:none !important;}
+    main{max-width:none !important;padding:0 !important;margin:0 !important;}
+    .panel{display:none !important;}
+    #reportPanel{display:block !important;max-width:none !important;margin:0 !important;}
+    .report-card,.card{background:#fff !important;box-shadow:none !important;border:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;padding:0 !important;border-radius:0 !important;}
+    .rp-title{font-size:20px;} .rp-sub{font-size:13px;color:#333 !important;}
+    .rp-row{font-size:14px;padding:6px 0;border-bottom:1px dotted #bbb;}
+    .rp-sep{border-top:1.5px dashed #888;}
+    .rp-net{border:2px solid #000;border-radius:10px;padding:10px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .rp-net.pos{background:#e6f8ef !important;color:#0b7a53 !important;}
+    .rp-net.neg{background:#ffe9ee !important;color:#c4304c !important;}
+    .split-row{break-inside:avoid;} .split-ico{background:#f1f1f1 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .split-pct{background:#eee !important;color:#333 !important;}
+    .split-left{color:#000 !important;}
+    .rp-note,.split-sub{color:#333 !important;}
+    .print-only{display:block !important;text-align:center;font-size:11px;color:#555;margin-top:18px;}
+  }
+</style>
 <style id="pastel-theme">
   :root{
     --bg:#f7f4ff; --surface:#f0ecff; --card:rgba(255,255,255,.80); --border:rgba(167,139,250,.22);
@@ -784,8 +808,10 @@
   <div class="report-actions">
     <button class="personal-add-btn dark" id="reportCopyBtn">📋 کپی گزارش</button>
     <button class="split-ghost-btn" id="reportShareBtn">📤 ارسال</button>
+    <button class="split-ghost-btn" id="reportPrintBtn">🖨️ چاپ</button>
   </div>
   <div class="card report-card" id="reportCard"></div>
+  <div class="print-only" id="printFooter"></div>
 </div>
 </main>
 
@@ -2317,6 +2343,19 @@ function renderReport(){
   document.querySelectorAll('#reportSeg button').forEach(b=>b.classList.toggle('active', b.dataset.p === reportPeriod));
 }
 document.querySelectorAll('#reportSeg button').forEach(b=>b.addEventListener('click', ()=>{ reportPeriod = b.dataset.p; renderReport(); }));
+
+
+$('reportPrintBtn').addEventListener('click', ()=>{
+  const R = buildReport(reportPeriod);
+  const now = new Date();
+  $('printFooter').textContent = 'وستا دکور — چاپ شده در ' + jLabel(now) + ' ساعت ' + now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
+  const oldTitle = document.title;
+  document.title = R.title + ' — ' + R.range;
+  const restore = ()=>{ document.title = oldTitle; window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  setTimeout(()=>window.print(), 50);
+  setTimeout(restore, 60000);
+});
 
 async function copyText(t){
   try{ await navigator.clipboard.writeText(t); return true; }
