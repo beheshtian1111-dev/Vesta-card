@@ -465,6 +465,47 @@
   @media (max-width:480px){ .tab-btn{padding:10px 2px;font-size:11px;gap:2px;} .tab-bar{gap:4px;padding:0 10px;} }
   @media (min-width:1024px){ #reportPanel{max-width:680px;margin:0 auto;} }
 </style>
+<style id="biz-theme">
+  .biz-bar{display:flex;gap:8px;max-width:520px;margin:12px auto 0;padding:0 16px;}
+  .biz-bar button{flex:1;padding:11px 8px;border-radius:16px;font-weight:800;font-size:14px;background:rgba(255,255,255,.75);border:1.5px solid var(--border);color:#7c77a3;transition:all .15s;}
+  .biz-bar button.active{color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(139,124,246,.34);background:linear-gradient(135deg,#8b7cf6,#b57cf5);}
+  .biz-bar button[data-biz="wp"].active{background:linear-gradient(135deg,#f472b6,#fb7185);box-shadow:0 8px 18px rgba(244,114,182,.38);}
+  @media (min-width:1024px){ .biz-bar{max-width:1200px;padding:0 32px;} .biz-bar button{max-width:260px;} }
+  @media (min-width:1500px){ .biz-bar{max-width:1360px;} }
+
+  /* wallpaper business: rose accent so you always know where you are */
+  body.biz-wp{
+    background:
+      radial-gradient(900px 520px at 92% -8%, #ffd9ea 0, transparent 60%),
+      radial-gradient(700px 520px at -8% 18%, #ffe6d6 0, transparent 55%),
+      radial-gradient(800px 600px at 60% 108%, #f6e0ff 0, transparent 55%),
+      #fff5f9;
+    background-attachment:fixed;
+  }
+  body.biz-wp .tab-btn.active,
+  body.biz-wp .report-seg button.active,
+  body.biz-wp .price-mode-btn.active,
+  body.biz-wp .personal-add-btn.dark{background:linear-gradient(135deg,#f472b6,#fb7185);box-shadow:0 8px 18px rgba(244,114,182,.34);}
+  body.biz-wp .fab,
+  body.biz-wp .btn-save{background:linear-gradient(135deg,#f472b6,#fb923c);box-shadow:0 12px 28px rgba(244,114,182,.42);}
+  body.biz-wp .brand-mark{background:linear-gradient(135deg,#f472b6,#fb923c);box-shadow:0 6px 16px rgba(244,114,182,.38);}
+  body.biz-wp .section-title button,
+  body.biz-wp .split-ghost-btn{background:linear-gradient(135deg,#ffe3f0,#ffeadb);color:#c2415f;}
+  body.biz-wp .split-hero{background:linear-gradient(135deg,#ffe0ee,#ffeadb 55%,#f3e2ff);}
+  body.biz-wp .split-hero .personal-total-amount{background:linear-gradient(90deg,#e8559a,#f08a4b);-webkit-background-clip:text;background-clip:text;}
+  body.biz-wp .split-pct{background:#ffe3f0;color:#c2415f;}
+  body.biz-wp .toast{background:linear-gradient(135deg,#e8559a,#f08a4b);}
+  body.biz-wp .cat-bar-fill{background:linear-gradient(90deg,#f9a8d4,#fdba74);}
+  body.biz-wp .tx-item,body.biz-wp .p-item,body.biz-wp .card,body.biz-wp .mini-stat,body.biz-wp .chart-card{border-color:rgba(255,255,255,.95);box-shadow:0 6px 22px rgba(244,114,182,.12);}
+</style>
+<style id="names-theme">
+  .biz-bar button.gear{flex:0 0 48px;padding:0;font-size:18px;color:inherit;}
+  #namesOverlay .sheet{max-height:88vh;overflow-y:auto;}
+  #namesOverlay .sheet-actions{display:flex;gap:8px;margin-top:8px;}
+  #namesOverlay .sheet-actions .btn{font-size:13px;padding:12px 6px;}
+  #namesOverlay .field input{width:100%;}
+  @media print{ #namesOverlay{display:none !important;} }
+</style>
 <style id="print-theme">
   .print-only{display:none;}
   @media print{
@@ -644,6 +685,11 @@
   <div class="sync-note"><span class="dot pending" id="syncDot"></span><span id="syncText">در حال اتصال...</span></div>
 </header>
 
+<div class="biz-bar" id="bizSwitch">
+  <button data-biz="shop">🏪 فروشگاه</button>
+  <button data-biz="wp">🌸 کاغذ دیواری</button>
+  <button class="gear" id="editNamesBtn" title="ویرایش نام تب‌ها">⚙️</button>
+</div>
 <div class="tab-bar">
   <button class="tab-btn active" id="tabStore">🛍️ فروشگاه</button>
   <button class="tab-btn" id="tabPersonal">🍰 خرج مغازه</button>
@@ -836,6 +882,21 @@ TABS.forEach(t=>{
 });
 </script>
 
+<div class="overlay" id="namesOverlay">
+  <div class="sheet">
+    <div class="sheet-title">✏️ ویرایش نام‌ها</div>
+    <div class="rp-note" style="margin:-6px 0 12px;">اسم و آیکون هر تب رو می‌تونی عوض کنی. خالی بذاری، اسم پیش‌فرض برمی‌گرده.</div>
+    <div class="rp-head" id="namesTabsHead">تب‌های این کسب‌وکار</div>
+    <div id="namesTabsRows"></div>
+    <div class="rp-head" style="margin-top:10px;">دکمه‌های بالای صفحه (کسب‌وکارها)</div>
+    <div id="namesBizRows"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-cancel" id="namesCancel">انصراف</button>
+      <button class="btn btn-cancel" id="namesReset">پیش‌فرض</button>
+      <button class="btn btn-save" id="namesSave">💾 ذخیره</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="overlay">
   <div class="sheet">
     <div class="sheet-title">✨ تراکنش جدید</div>
@@ -1044,7 +1105,7 @@ function snapFor(L, col, fromCache){
     docs = docs.filter(d=>d.data()[field] !== undefined);
     docs.sort((a,b)=>{ const x=a.data()[field], y=b.data()[field]; return x<y ? -k : x>y ? k : 0; });
   }
-  return { docs, metadata:meta };
+  return { docs, empty: docs.length === 0, size: docs.length, metadata:meta };
 }
 function emit(col, fromCache){
   (listeners[col] || []).forEach(L=>{ try{ L.cb(snapFor(L, col, fromCache)); }catch(e){ console.error(e); } });
@@ -1150,13 +1211,36 @@ function onSnapshot(ref, cb, errCb){
 const app = {};
 const db = {};
 enableIndexedDbPersistence(db);
-const txCol = collection(db, "transactions");
-const prodCol = collection(db, "products");
-const personalCol = collection(db, "personalExpenses");
-const obCol = collection(db, "obligations");
+/* ---- two businesses in one app: each has its own collections, targets, split %, debts and reports ---- */
+const BIZ_LIST = {
+  shop:{ key:'shop', name:'فروشگاه',       title:'وستا دکور',     icon:'🏪', prefix:'',    suffix:'',    spend:'مغازه' },
+  wp:  { key:'wp',   name:'کاغذ دیواری',   title:'کاغذ دیواری',   icon:'🌸', prefix:'wp_', suffix:'-wp', spend:'کاغذ دیواری' }
+};
+let BIZ = localStorage.getItem('vesta-biz'); if(!BIZ_LIST[BIZ]) BIZ = 'shop';
+const B = BIZ_LIST[BIZ];
+const cn = (n)=> B.prefix + n;
+const TAB_IDS = ['tabStore','tabPersonal','tabDebts','tabHistory','tabReport'];
+const TAB_DEFAULTS = {
+  tabStore:'🛍️ فروشگاه', tabPersonal: BIZ==='wp' ? '🍰 خرج و مخارج' : '🍰 خرج مغازه',
+  tabDebts:'🧾 چک و بدهی', tabHistory:'📅 تاریخچه', tabReport:'📋 گزارش'
+};
+const BIZ_NAME_DEFAULTS = { shop:'🏪 فروشگاه', wp:'🌸 کاغذ دیواری' };
+let tabNames = {}, bizNames = {};
+try{ tabNames = JSON.parse(localStorage.getItem('vesta-tab-names' + B.suffix) || '{}') || {}; }catch(e){}
+try{ bizNames = JSON.parse(localStorage.getItem('vesta-biz-names') || '{}') || {}; }catch(e){}
+document.body.classList.add('biz-' + BIZ);
 
-const DEFAULT_PRODUCTS = ['پنل دیواری فومی','کاغذ دیواری','ترمووال','ورق مرمر','کف‌پوش','قرنیز','لمسه','سایر فروش'];
-const EXPENSE_CATS = ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه'];
+const txCol = collection(db, cn("transactions"));
+const prodCol = collection(db, cn("products"));
+const personalCol = collection(db, cn("personalExpenses"));
+const obCol = collection(db, cn("obligations"));
+
+const DEFAULT_PRODUCTS = BIZ==='wp'
+  ? ['کاغذ دیواری (رول)','آلبوم کاغذ دیواری','نصب و اجرا','سایر فروش']
+  : ['پنل دیواری فومی','کاغذ دیواری','ترمووال','ورق مرمر','کف‌پوش','قرنیز','لمسه','سایر فروش'];
+const EXPENSE_CATS = BIZ==='wp'
+  ? ['خرید کاغذ دیواری','حقوق و دستمزد','اجاره / هزینه ثابت','حمل و نقل','تبلیغات','سایر هزینه']
+  : ['خرید مواد اولیه','حقوق و دستمزد','اجاره / هزینه ثابت مغازه','حمل و نقل','تبلیغات','سایر هزینه'];
 
 const DEFAULT_SPLITS = [
   {id:'d1', name:'برداشت شخصی', pct:30},
@@ -1165,10 +1249,10 @@ const DEFAULT_SPLITS = [
   {id:'d4', name:'تبلیغات', pct:10},
   {id:'d5', name:'پس‌انداز', pct:15}
 ];
-let DAILY_TARGET = Number(localStorage.getItem('vesta-daily-target')) || 6500000;
-let MONTHLY_TARGET = Number(localStorage.getItem('vesta-monthly-target')) || 195000000;
+let DAILY_TARGET = Number(localStorage.getItem('vesta-daily-target' + B.suffix)) || (BIZ==='wp' ? 3000000 : 6500000);
+let MONTHLY_TARGET = Number(localStorage.getItem('vesta-monthly-target' + B.suffix)) || (BIZ==='wp' ? 90000000 : 195000000);
 let splitCats = (()=>{
-  try{ const v = JSON.parse(localStorage.getItem('vesta-split-cats')); if(Array.isArray(v)) return v; }catch(e){}
+  try{ const v = JSON.parse(localStorage.getItem('vesta-split-cats' + B.suffix)); if(Array.isArray(v)) return v; }catch(e){}
   return DEFAULT_SPLITS.map(x=>({...x}));
 })();
 let personalEntries = [];
@@ -1400,7 +1484,7 @@ function renderProductList(){
       const part = Number(wrap.querySelector('.pe-part').value)||0;
       if(!name){ showToast('اسم جنس نمی‌تونه خالی باشه'); return; }
       try{
-        await updateDoc(doc(db,"products",id), {name, costPrice:cost, consumerPrice:cons, partnerPrice:part});
+        await updateDoc(doc(db,cn("products"),id), {name, costPrice:cost, consumerPrice:cons, partnerPrice:part});
         showToast('ویرایش شد');
       }catch(e){ showToast('خطا در ویرایش'); }
     });
@@ -1408,7 +1492,7 @@ function renderProductList(){
   list.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('این جنس حذف بشه؟')) return;
-      try{ await deleteDoc(doc(db,"products",btn.dataset.del)); showToast('حذف شد'); }
+      try{ await deleteDoc(doc(db,cn("products"),btn.dataset.del)); showToast('حذف شد'); }
       catch(e){ showToast('خطا در حذف'); }
     });
   });
@@ -1759,7 +1843,7 @@ function render(){
     btn.addEventListener('click', async ()=>{
       if(!confirm('این تراکنش حذف بشه؟')) return;
       try{
-        await deleteDoc(doc(db, "transactions", btn.dataset.id));
+        await deleteDoc(doc(db, cn("transactions"), btn.dataset.id));
         showToast('تراکنش حذف شد');
       }catch(e){ showToast('خطا در حذف، دوباره تلاش کنید'); }
     });
@@ -1871,7 +1955,7 @@ $('btnSave').addEventListener('click', async ()=>{
 });
 
 /* ================= obligations (چک، وام، بدهی، کرایه) ================= */
-const OB_TYPE_LABELS = { check:'چک', loan:'وام', debt:'بدهی', rent:'کرایه مغازه', other:'سایر' };
+const OB_TYPE_LABELS = { check:'چک', loan:'وام', debt:'بدهی', rent: BIZ==='wp' ? 'کرایه' : 'کرایه مغازه', other:'سایر' };
 const OB_TYPE_EMOJI  = { check:'🧾', loan:'🏦', debt:'📋', rent:'🏠', other:'📌' };
 const OB_WARN_DAYS = 10;
 let obligations = [];
@@ -1929,14 +2013,14 @@ function renderObligations(){
     btn.addEventListener('click', async ()=>{
       const o = obligations.find(x=>x.id===btn.dataset.paid);
       if(!o) return;
-      try{ await updateDoc(doc(db,"obligations",o.id), {paid: !o.paid}); }
+      try{ await updateDoc(doc(db,cn("obligations"),o.id), {paid: !o.paid}); }
       catch(e){ showToast('خطا در ثبت'); }
     });
   });
   list.querySelectorAll('[data-obdel]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('این مورد حذف بشه؟')) return;
-      try{ await deleteDoc(doc(db,"obligations",btn.dataset.obdel)); showToast('حذف شد'); }
+      try{ await deleteDoc(doc(db,cn("obligations"),btn.dataset.obdel)); showToast('حذف شد'); }
       catch(e){ showToast('خطا در حذف'); }
     });
   });
@@ -2029,11 +2113,12 @@ const esc = (t)=> String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':
 const fmtPct = (n)=> Number(n).toLocaleString('fa-IR',{maximumFractionDigits:1});
 
 /* ---------- settings (manual targets + split percentages), synced via Firestore ---------- */
-const settingsRef = doc(db, "settings", "config");
+const settingsRef = doc(db, cn("settings"), "config");
 function applySettings(d){
-  if(Number(d.dailyTarget) > 0){ DAILY_TARGET = Number(d.dailyTarget); localStorage.setItem('vesta-daily-target', DAILY_TARGET); }
-  if(Number(d.monthlyTarget) > 0){ MONTHLY_TARGET = Number(d.monthlyTarget); localStorage.setItem('vesta-monthly-target', MONTHLY_TARGET); }
-  if(Array.isArray(d.splits)){ splitCats = d.splits; localStorage.setItem('vesta-split-cats', JSON.stringify(splitCats)); }
+  if(Number(d.dailyTarget) > 0){ DAILY_TARGET = Number(d.dailyTarget); localStorage.setItem('vesta-daily-target' + B.suffix, DAILY_TARGET); }
+  if(Number(d.monthlyTarget) > 0){ MONTHLY_TARGET = Number(d.monthlyTarget); localStorage.setItem('vesta-monthly-target' + B.suffix, MONTHLY_TARGET); }
+  if(d.tabNames && typeof d.tabNames === 'object'){ tabNames = d.tabNames; localStorage.setItem('vesta-tab-names' + B.suffix, JSON.stringify(tabNames)); applyTabNames(); }
+  if(Array.isArray(d.splits)){ splitCats = d.splits; localStorage.setItem('vesta-split-cats' + B.suffix, JSON.stringify(splitCats)); }
 }
 function saveSettings(partial){
   applySettings(partial);
@@ -2146,7 +2231,7 @@ function renderPersonal(){
   list.querySelectorAll('[data-pid]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       try{
-        await deleteDoc(doc(db, "personalExpenses", btn.dataset.pid));
+        await deleteDoc(doc(db, cn("personalExpenses"), btn.dataset.pid));
         showToast('حذف شد');
       }catch(e){ showToast('خطا در حذف'); }
     });
@@ -2283,7 +2368,7 @@ function buildReport(p){
 function reportText(R){
   const bar = '━━━━━━━━━━━━━━';
   const L = [];
-  L.push(`📊 ${R.title} — وستا دکور`);
+  L.push(`📊 ${R.title} — ${B.title}`);
   L.push(`📅 ${R.range}`);
   L.push(bar);
   L.push(`💰 فروش: ${fmt(R.sales)} تومان (${fmt(R.invoices)} فاکتور)`);
@@ -2296,7 +2381,7 @@ function reportText(R){
   L.push('🍰 تقسیم درآمد' + (R.net <= 0 ? ' (سودی برای تقسیم نیست)' : ''));
   R.splits.forEach(s=>L.push(`${s.icon} ${s.name} (${fmtPct(s.pct)}٪): سهم ${fmt(s.alloc)} | خرج ${fmt(s.spent)} | مانده ${fmtS(s.left)}`));
   if(R.unassigned > 0) L.push(`▫️ بدون دسته: خرج ${fmt(R.unassigned)}`);
-  L.push(`🛒 مجموع خرج مغازه: ${fmt(R.spentAll)} تومان`);
+  L.push(`🛒 مجموع خرج ${B.spend}: ${fmt(R.spentAll)} تومان`);
   if(R.byProduct.length){
     L.push(bar); L.push('🛍️ فروش به تفکیک:');
     R.byProduct.forEach(o=>L.push(`${iconFor(o.name,'income')} ${o.name}: ${fmt(o.sales)}${o.qty?` (${fmt(o.qty)} عدد)`:''} — سود ${fmtS(o.profit)}`));
@@ -2325,7 +2410,7 @@ function reportHtml(R){
       <div class="split-left" style="color:${s.left<0?'var(--red)':'var(--green)'}">${fmtS(s.left)}</div></div>
       <div class="split-sub"><span>سهم: ${fmt(s.alloc)}</span><span>خرج: ${fmt(s.spent)}</span></div></div>`).join('');
   if(R.unassigned > 0) h += row('▫️ خرج بدون دسته', fmt(R.unassigned));
-  h += row('🛒 مجموع خرج مغازه', fmt(R.spentAll));
+  h += row('🛒 مجموع خرج ' + B.spend, fmt(R.spentAll));
   if(R.byProduct.length){
     h += `<div class="rp-sep"></div><div class="rp-head">🛍️ فروش به تفکیک</div>`;
     h += R.byProduct.map(o=>row(`${iconFor(o.name,'income')} ${esc(o.name)}${o.qty?` <span style="font-weight:600;font-size:11px;color:var(--text-muted)">(${fmt(o.qty)} عدد)</span>`:''}`, fmt(o.sales))).join('');
@@ -2348,7 +2433,7 @@ document.querySelectorAll('#reportSeg button').forEach(b=>b.addEventListener('cl
 $('reportPrintBtn').addEventListener('click', ()=>{
   const R = buildReport(reportPeriod);
   const now = new Date();
-  $('printFooter').textContent = 'وستا دکور — چاپ شده در ' + jLabel(now) + ' ساعت ' + now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
+  $('printFooter').textContent = B.title + ' — چاپ شده در ' + jLabel(now) + ' ساعت ' + now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
   const oldTitle = document.title;
   document.title = R.title + ' — ' + R.range;
   const restore = ()=>{ document.title = oldTitle; window.removeEventListener('afterprint', restore); };
@@ -2375,6 +2460,80 @@ $('reportShareBtn').addEventListener('click', async ()=>{
   if(navigator.share){ try{ await navigator.share({text:t}); return; }catch(e){ if(e && e.name==='AbortError') return; } }
   const ok = await copyText(t);
   showToast(ok ? 'گزارش کپی شد ✓' : 'کپی نشد، دوباره امتحان کنید');
+});
+
+
+/* ---------- business switcher ---------- */
+(function applyBusiness(){
+  document.title = 'حسابدار ' + (BIZ==='wp' ? 'کاغذ دیواری' : 'وستا');
+  const bn = document.querySelector('.brand-name'); if(bn) bn.textContent = 'حسابدار ' + (BIZ==='wp' ? 'کاغذ دیواری 🌸' : 'وستا ✨');
+  document.querySelectorAll('#bizSwitch button[data-biz]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.biz === BIZ);
+    b.addEventListener('click', ()=>{
+      if(b.dataset.biz === BIZ) return;
+      localStorage.setItem('vesta-biz', b.dataset.biz);
+      location.reload();
+    });
+  });
+  if(BIZ === 'wp'){
+    document.querySelectorAll('.section-title').forEach(el=>{
+      const t = el.firstChild; if(t && t.nodeType===3) t.nodeValue = t.nodeValue.replace('خرج‌های مغازه','خرج و مخارج');
+    });
+    const rent = document.querySelector('option[value="rent"]'); if(rent) rent.textContent = 'کرایه';
+  }
+})();
+
+
+/* ---------- editable tab / business names ---------- */
+function applyTabNames(){
+  TAB_IDS.forEach(id=>{ const el = $(id); if(el) el.textContent = (tabNames[id] && tabNames[id].trim()) || TAB_DEFAULTS[id]; });
+}
+function applyBizNames(){
+  document.querySelectorAll('#bizSwitch button[data-biz]').forEach(b=>{
+    b.textContent = (bizNames[b.dataset.biz] && bizNames[b.dataset.biz].trim()) || BIZ_NAME_DEFAULTS[b.dataset.biz];
+  });
+}
+applyTabNames(); applyBizNames();
+
+const globalRef = doc(db, "settings", "global");
+onSnapshot(globalRef, (snap)=>{
+  if(snap.exists() && snap.data().bizNames && typeof snap.data().bizNames === 'object'){
+    bizNames = snap.data().bizNames;
+    localStorage.setItem('vesta-biz-names', JSON.stringify(bizNames));
+    applyBizNames();
+  }
+}, ()=>{});
+function saveGlobal(partial){
+  if(partial.bizNames){ bizNames = partial.bizNames; localStorage.setItem('vesta-biz-names', JSON.stringify(bizNames)); applyBizNames(); }
+  setDoc(globalRef, partial, {merge:true}).catch(()=>{});
+}
+
+const TAB_FIELD_LABELS = {tabStore:'تب اول', tabPersonal:'تب دوم', tabDebts:'تب سوم', tabHistory:'تب چهارم', tabReport:'تب پنجم'};
+function openNamesEditor(){
+  $('namesTabsRows').innerHTML = TAB_IDS.map(id=>`
+    <div class="field"><label><span>${TAB_FIELD_LABELS[id]}</span><span style="font-weight:600;">پیش‌فرض: ${esc(TAB_DEFAULTS[id])}</span></label>
+    <input type="text" maxlength="24" data-tab="${id}" value="${esc(tabNames[id] || TAB_DEFAULTS[id])}" placeholder="${esc(TAB_DEFAULTS[id])}"></div>`).join('');
+  $('namesBizRows').innerHTML = Object.keys(BIZ_NAME_DEFAULTS).map(k=>`
+    <div class="field"><label><span>${k==='shop'?'کسب‌وکار اول':'کسب‌وکار دوم'}</span><span style="font-weight:600;">پیش‌فرض: ${esc(BIZ_NAME_DEFAULTS[k])}</span></label>
+    <input type="text" maxlength="24" data-bizname="${k}" value="${esc(bizNames[k] || BIZ_NAME_DEFAULTS[k])}" placeholder="${esc(BIZ_NAME_DEFAULTS[k])}"></div>`).join('');
+  $('namesOverlay').classList.add('open');
+}
+const closeNamesEditor = ()=> $('namesOverlay').classList.remove('open');
+$('editNamesBtn').addEventListener('click', openNamesEditor);
+$('namesCancel').addEventListener('click', closeNamesEditor);
+$('namesOverlay').addEventListener('click', (e)=>{ if(e.target.id==='namesOverlay') closeNamesEditor(); });
+$('namesSave').addEventListener('click', ()=>{
+  const t = {}, bz = {};
+  $('namesTabsRows').querySelectorAll('input[data-tab]').forEach(i=>{ const v = i.value.trim(); if(v && v !== TAB_DEFAULTS[i.dataset.tab]) t[i.dataset.tab] = v; });
+  $('namesBizRows').querySelectorAll('input[data-bizname]').forEach(i=>{ const v = i.value.trim(); if(v && v !== BIZ_NAME_DEFAULTS[i.dataset.bizname]) bz[i.dataset.bizname] = v; });
+  closeNamesEditor();
+  saveSettings({tabNames: t});
+  saveGlobal({bizNames: bz});
+});
+$('namesReset').addEventListener('click', ()=>{
+  closeNamesEditor();
+  saveSettings({tabNames: {}});
+  saveGlobal({bizNames: {}});
 });
 
 todayLabel();
