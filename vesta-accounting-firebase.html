@@ -655,6 +655,13 @@
   @media (hover:hover){ .tx-item:hover,.p-item:hover,.target-card:hover{transform:translateY(-2px);} }
   .dash-col{min-width:0;} .chart-wrap{min-width:0;}
 </style>
+<style id="backup-theme">
+  #backupOverlay .sheet{max-height:88vh;overflow-y:auto;}
+  #backupOverlay .sheet-actions{display:flex;gap:8px;margin-top:12px;}
+  .biz-bar button.gear{position:relative;}
+  .biz-bar button.gear.due::after{content:'';position:absolute;top:7px;left:8px;width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px rgba(13,28,61,.9);}
+  @media print{ #backupOverlay{display:none !important;} }
+</style>
 <style id="print-theme">
   .print-only{display:none;}
   @media print{
@@ -716,6 +723,7 @@
   <button data-biz="shop">🏪 فروشگاه</button>
   <button data-biz="wp">🌸 کاغذ دیواری</button>
   <button class="gear" id="editNamesBtn" title="ویرایش نام تب‌ها">⚙️</button>
+  <button class="gear" id="backupBtn" title="پشتیبان‌گیری">💾</button>
 </div>
 <div class="tab-bar">
   <button class="tab-btn active" id="tabStore">🛍️ فروشگاه</button>
@@ -910,6 +918,21 @@ TABS.forEach(t=>{
 });
 </script>
 
+<div class="overlay" id="backupOverlay">
+  <div class="sheet">
+    <div class="sheet-title">💾 پشتیبان‌گیری</div>
+    <div class="rp-note" style="margin:-6px 0 12px;">یک فایل از همه‌ی اطلاعات هر دو کسب‌وکار (فروش‌ها، هزینه‌ها، چک‌ها، تنظیمات) روی گوشی یا کامپیوترت ذخیره می‌شه.</div>
+    <div class="card" id="backupStatus" style="margin-bottom:12px;text-align:center;font-size:13.5px;"></div>
+    <button class="personal-add-btn" id="backupDownload" style="width:100%;">⬇️ دانلود پشتیبان</button>
+    <div class="rp-sep"></div>
+    <div class="rp-head">⬆️ بازیابی از فایل</div>
+    <div class="rp-note" style="margin:0 0 10px;">فایل پشتیبان قبلی رو انتخاب کن. چیزی از اطلاعات فعلی حذف نمی‌شه؛ فقط موارد فایل اضافه می‌شن (و موارد هم‌شناسه جایگزین می‌شن).</div>
+    <input type="file" id="backupFile" accept=".json,application/json" style="display:none">
+    <button class="split-ghost-btn" id="backupRestore" style="width:100%;">انتخاب فایل پشتیبان</button>
+    <div class="rp-note" id="backupMsg" style="margin-top:10px;min-height:16px;text-align:center;"></div>
+    <div class="sheet-actions"><button class="btn btn-cancel" id="backupClose">بستن</button></div>
+  </div>
+</div>
 <div class="overlay" id="namesOverlay">
   <div class="sheet">
     <div class="sheet-title">✏️ ویرایش نام‌ها</div>
@@ -2562,6 +2585,88 @@ $('namesReset').addEventListener('click', ()=>{
   closeNamesEditor();
   saveSettings({tabNames: {}});
   saveGlobal({bizNames: {}});
+});
+
+
+/* ---------- backup / restore ---------- */
+const BACKUP_COLS = [];
+['', 'wp_'].forEach(pf=> ['transactions','products','personalExpenses','obligations','settings'].forEach(c=>BACKUP_COLS.push(pf + c)));
+const LAST_BACKUP_KEY = 'vesta-last-backup';
+function backupAgeDays(){
+  const t = localStorage.getItem(LAST_BACKUP_KEY); if(!t) return null;
+  const d = new Date(t); if(isNaN(d)) return null;
+  const a = new Date(d.getFullYear(), d.getMonth(), d.getDate()), b = new Date(); const n = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((n - a) / 86400000);
+}
+function refreshBackupStatus(){
+  const days = backupAgeDays();
+  const t = localStorage.getItem(LAST_BACKUP_KEY);
+  $('backupStatus').innerHTML = days === null
+    ? '⚠️ هنوز پشتیبان نگرفتی'
+    : `آخرین پشتیبان: <b>${days === 0 ? 'امروز' : days === 1 ? 'دیروز' : faN(days) + ' روز پیش'}</b> <span style="color:var(--text-muted);font-size:11.5px;">(${jLabel(new Date(t))})</span>`;
+  $('backupBtn').classList.toggle('due', days === null || days > 7);
+}
+const backupMsg = (t, bad)=>{ const el = $('backupMsg'); el.textContent = t; el.style.color = bad ? 'var(--red)' : 'var(--text-muted)'; };
+$('backupBtn').addEventListener('click', ()=>{ refreshBackupStatus(); backupMsg(''); $('backupOverlay').classList.add('open'); });
+$('backupClose').addEventListener('click', ()=>$('backupOverlay').classList.remove('open'));
+$('backupOverlay').addEventListener('click', (e)=>{ if(e.target.id === 'backupOverlay') $('backupOverlay').classList.remove('open'); });
+refreshBackupStatus();
+
+async function buildBackup(){
+  const docs = [], counts = {}; let fromCache = false;
+  for(const col of BACKUP_COLS){
+    let rows;
+    try{ rows = await fetchAll(col); }
+    catch(e){ fromCache = true; rows = [...cacheOf(col)].map(([id, data])=>({id, data})); }
+    counts[col] = rows.length;
+    rows.forEach(r=>docs.push({collection:col, id:r.id, data:r.data}));
+  }
+  return {fromCache, obj:{app:'vesta-accounting', version:1, createdAt:new Date().toISOString(), counts, docs}};
+}
+async function saveBackupFile(obj){
+  const name = 'vesta-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  const blob = new Blob([JSON.stringify(obj)], {type:'application/json'});
+  try{
+    const file = new File([blob], name, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); return true; }
+  }catch(e){ if(e && e.name === 'AbortError') return false; }      // cancelled by the user; any other problem falls back to a normal download
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+  return true;
+}
+$('backupDownload').addEventListener('click', async ()=>{
+  const btn = $('backupDownload'); btn.disabled = true; backupMsg('در حال آماده‌سازی…');
+  try{
+    const {obj, fromCache} = await buildBackup();
+    const total = obj.docs.length;
+    const ok = await saveBackupFile(obj);
+    if(ok){
+      localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString()); refreshBackupStatus();
+      backupMsg(fromCache ? `⚠️ اینترنت نبود؛ ${fmt(total)} مورد از حافظه‌ی همین دستگاه ذخیره شد (ممکنه کامل نباشه)` : `✓ ${fmt(total)} مورد ذخیره شد`);
+      showToast('پشتیبان ذخیره شد ✓');
+    } else backupMsg('');
+  }catch(e){ backupMsg('خطا در ساخت پشتیبان: ' + (e && e.message || e), true); }
+  btn.disabled = false;
+});
+
+$('backupRestore').addEventListener('click', ()=>$('backupFile').click());
+$('backupFile').addEventListener('change', async (ev)=>{
+  const f = ev.target.files[0]; ev.target.value = ''; if(!f) return;
+  let obj; try{ obj = JSON.parse(await f.text()); }catch(e){ backupMsg('این فایل خوانده نشد', true); return; }
+  if(!obj || obj.app !== 'vesta-accounting' || !Array.isArray(obj.docs)){ backupMsg('این فایل، پشتیبان حسابدار وستا نیست', true); return; }
+  const docs = obj.docs.filter(d=>d && BACKUP_COLS.includes(d.collection) && d.id && d.data && typeof d.data === 'object');
+  if(!docs.length){ backupMsg('داخل این فایل اطلاعاتی نبود', true); return; }
+  const when = obj.createdAt ? jLabel(new Date(obj.createdAt)) : '';
+  if(!confirm(`${fmt(docs.length)} مورد از پشتیبان ${when} بازیابی بشه؟\n\nچیزی از اطلاعات فعلی حذف نمی‌شه.`)) return;
+  try{
+    for(let i = 0; i < docs.length; i += 200){
+      backupMsg(`در حال بازیابی… ${fmt(Math.min(i + 200, docs.length))} از ${fmt(docs.length)}`);
+      await authed('/rest/v1/' + TABLE + '?on_conflict=collection,id', {method:'POST', headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+        body: docs.slice(i, i + 200).map(d=>({collection:d.collection, id:String(d.id), data:d.data})), timeout:40000});
+    }
+    reloadAll();
+    backupMsg(`✓ ${fmt(docs.length)} مورد بازیابی شد`); showToast('بازیابی انجام شد ✓');
+  }catch(e){ backupMsg('خطا در بازیابی: ' + (e && e.message || e) + ' (اینترنت و ورود رو چک کن)', true); }
 });
 
 todayLabel();
